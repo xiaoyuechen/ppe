@@ -5,7 +5,7 @@
 #define DOWNSAMPLE 1
 #define ZIGZAG 2
 #define DCDIFF 3
- 
+
 #define QUALITY 1
 #define WINDOW_SIZE 16
 #define BLOCK_SIZE 16

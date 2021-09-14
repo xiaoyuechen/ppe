@@ -9,6 +9,6 @@
 #ifndef dct8x8_block_h
 #define dct8x8_block_h
 
-void dct8x8_block(float* in, float* out, int stride);
+void dct8x8_block (float *in, float *out, int stride);
 
 #endif
