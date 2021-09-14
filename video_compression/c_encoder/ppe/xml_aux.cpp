@@ -390,7 +390,7 @@ double runtime_accum[10] = { 0 };
 void
 createStatsFile (void)
 {
-  std::string path = "..\\..\\outputs\\execution_stats.txt";
+  std::string path = "../../outputs/execution_stats.txt";
   if (std::remove (path.c_str ()) != 0)
     return;
 }
@@ -399,7 +399,7 @@ void
 writestats (int framenum, int is_pframe, double *runtime)
 {
   std::ofstream file;
-  file.open ("..\\..\\outputs\\execution_stats.txt", ios::app);
+  file.open ("../../outputs/execution_stats.txt", ios::app);
   string ftype = is_pframe ? "P" : "I";
   file << "********* "
        << "Frame: " << std::to_string (framenum) << " (" << ftype << ")"
@@ -422,7 +422,7 @@ closeStats (void)
 {
   double total = 0;
   std::ofstream file;
-  file.open ("..\\..\\outputs\\execution_stats.txt", ios::app);
+  file.open ("../../outputs/execution_stats.txt", ios::app);
   file << "********* "
        << "    Total   "
        << " *********" << std::endl;
