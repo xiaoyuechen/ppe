@@ -25,18 +25,18 @@ loadImage (int number, string path, Image **photo)
   filename = path + to_string (number) + ".tiff";
   TIFF *tif = TIFFOpen (filename.c_str (), "r");
   if (tif == NULL)
-    fprintf (stderr, "Failed opening image: %s\n", filename);
+    fprintf (stderr, "Failed opening image: %s\n", filename.c_str ());
   if (!(TIFFRGBAImageBegin (&img, tif, 0, emsg)))
-    TIFFError (filename.c_str (), emsg);
+    TIFFError (filename.c_str (), "%s", emsg);
 
-  uint32 w, h;
+  uint32_t w, h;
   size_t npixels;
-  uint32 *raster;
+  uint32_t *raster;
 
   TIFFGetField (tif, TIFFTAG_IMAGEWIDTH, &w);
   TIFFGetField (tif, TIFFTAG_IMAGELENGTH, &h);
   npixels = w * h;
-  raster = (uint32 *)_TIFFmalloc (npixels * sizeof (uint32));
+  raster = (uint32_t *)_TIFFmalloc (npixels * sizeof (uint32_t));
 
   TIFFReadRGBAImage (tif, w, h, raster, 0);
 
@@ -378,8 +378,8 @@ dcDiff (Channel *in, Channel *out)
         }
     }
 
-  int new_w = (int)max ((float)(width / 8), 1);
-  int new_h = (int)max ((float)(height / 8), 1);
+  int new_w = std::max (width / 8, 1);
+  int new_h = std::max (height / 8, 1);
 
   out->data[0] = (float)dc_values[0];
 
@@ -394,8 +394,8 @@ dcDiff (Channel *in, Channel *out)
           iter++;
         }
     }
-  delete dc_values_transposed;
-  delete dc_values;
+  delete[] dc_values_transposed;
+  delete[] dc_values;
 }
 
 void
@@ -514,7 +514,7 @@ encode8x8 (Channel *ordered, SMatrix *encoded)
           else
             it = MPEG_CONSTANT;
         }
-      delete block;
+      delete[] block;
     }
 }
 
