@@ -1,2 +1,4 @@
 *~
-build
+*.o
+.gdb_history
+video_compression/dump

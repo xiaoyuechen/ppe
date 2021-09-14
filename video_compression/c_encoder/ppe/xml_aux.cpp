@@ -3,7 +3,7 @@
 #include <string>
 #include <stdio.h>
 #include "xml_aux.h"
-#include "assert.h"
+#include <assert.h>
 #include "config.h"
 #include <map>
 #include <iomanip>
@@ -19,25 +19,25 @@ xmlDocPtr create_xml_stream(int width, int height, int quality, int window_size,
 	xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
     xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "STREAM");
     xmlDocSetRootElement(doc, root_node);
-    
+
     char buf[16];
-    sprintf_s(buf, "%d", width);
+    sprintf(buf, "%d", width);
 	xmlNewProp(root_node, BAD_CAST "width", BAD_CAST buf);
 
-	sprintf_s(buf, "%d", height);
+	sprintf(buf, "%d", height);
     xmlNewProp(root_node, BAD_CAST "height", BAD_CAST buf);
 
-	sprintf_s(buf, "%d", quality);
+	sprintf(buf, "%d", quality);
     xmlNewProp(root_node, BAD_CAST "quality", BAD_CAST buf);
 
-	sprintf_s(buf, "%d", window_size);
+	sprintf(buf, "%d", window_size);
     xmlNewProp(root_node, BAD_CAST "window_size", BAD_CAST buf);
 
-	sprintf_s(buf, "%d", block_size);
+	sprintf(buf, "%d", block_size);
     xmlNewProp(root_node, BAD_CAST "block_size", BAD_CAST buf);
 
     //xmlSaveFormatFileEnc("-", doc, "UTF-8", 1);
-    
+
     return doc;
 }
 
@@ -48,7 +48,7 @@ std::string vector2str_(float* mat, int size){
 	//char aux[20];
 	for(int i=0; i<size; i++){
 		if(i!=0) buf += " ";
-		buf+=std::to_string((int)mat[i]); //sprintf_s(aux, "%.0f", mat[i]);
+		buf+=std::to_string((int)mat[i]); //sprintf(aux, "%.0f", mat[i]);
 		//strcat_s(buf, bufsize, aux);
 	}
 	buf+="]";//strcat_s(buf,bufsize,"]");
@@ -75,11 +75,11 @@ void stream_image(xmlDocPtr XML, xmlNodePtr parentNode, Channel* dc_diff, SMatri
 	xmlNodePtr content = xmlNewText(BAD_CAST res.c_str());
 	xmlAddChild(dcNode, content);
 	xmlAddChild(parentNode, dcNode);
-	
+
 	xmlNodePtr blocksNode = xmlNewNode(NULL, BAD_CAST "BLOCKS");
 	int block_count = 0;
 	int aux = 0;
-	
+
 	for(int i=0; i<image_zero->width/*image_zero_size*/; i++){
         xmlNodePtr bNode = xmlNewNode(NULL, BAD_CAST "B");
         buf ="\0";
@@ -97,7 +97,7 @@ void stream_image(xmlDocPtr XML, xmlNodePtr parentNode, Channel* dc_diff, SMatri
 	buf += std::to_string(block_count);
 	xmlNewProp(blocksNode, BAD_CAST "coeffs", BAD_CAST buf.c_str());
     xmlAddChild(parentNode,blocksNode);
-	
+
 }
 
 void stream_frame(xmlDocPtr XML, int frame_number, std::vector<mVector>* motion_vectors, int ref_frame_number, Frame* dc_diff, FrameEncode* image_zero){
@@ -106,8 +106,8 @@ void stream_frame(xmlDocPtr XML, int frame_number, std::vector<mVector>* motion_
 	xmlNodePtr rootNode  = xmlDocGetRootElement(XML);
 	xmlNodePtr frameNode = xmlNewNode(NULL, BAD_CAST "FRAME");
 	xmlAddChild(rootNode, frameNode);
-		
-	buf = std::to_string(frame_number);//sprintf_s(buf, "%d", frame_number);
+
+	buf = std::to_string(frame_number);//sprintf(buf, "%d", frame_number);
 	xmlNewProp(frameNode, BAD_CAST "number", BAD_CAST buf.c_str());
 	if (motion_vectors==NULL)
 		xmlNewProp(frameNode, BAD_CAST "type", BAD_CAST "I");
@@ -127,19 +127,19 @@ void stream_frame(xmlDocPtr XML, int frame_number, std::vector<mVector>* motion_
         }
     	xmlAddChild(frameNode,motionVectorsNode);
 	}
-	
+
 	xmlNodePtr YNode = xmlNewNode(NULL, BAD_CAST "Y");
 	xmlNodePtr CrNode = xmlNewNode(NULL, BAD_CAST "Cr");
 	xmlNodePtr CbNode = xmlNewNode(NULL, BAD_CAST "Cb");
 	xmlAddChild(frameNode,YNode);
 	xmlAddChild(frameNode,CrNode);
 	xmlAddChild(frameNode,CbNode);
-	
-	
+
+
 	stream_image(XML, YNode, dc_diff->Y, image_zero->Y/*, 128, 128, 256*/);
 	stream_image(XML, CrNode, dc_diff->Cr, image_zero->Cr/*, 64, 64, 64*/);
 	stream_image(XML, CbNode, dc_diff->Cb, image_zero->Cb/*, 64, 64, 64*/);
-	
+
 }
 
 void write_stream(std::string stream_path, xmlDocPtr stream){
@@ -150,14 +150,13 @@ void write_stream(std::string stream_path, xmlDocPtr stream){
 
 
 void dump_matrix(float *matrix, int width, int height, const char *filename, int DOWNSAMPLED) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 
 	assert(matrix != NULL);
 	assert(filename != NULL);
 	assert(width>=0 && height>=0);
 
- 	FILE *fp;
-	fopen_s(&fp, filename, "w");
+	FILE* fp = fopen(filename, "w");
 	assert(fp != NULL);
 
 	int w = width;
@@ -179,7 +178,7 @@ void dump_matrix(float *matrix, int width, int height, const char *filename, int
 }
 
 void dump_image(Image* image, const char *name, int frame_number) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 
 	assert(image != NULL);
 
@@ -201,7 +200,7 @@ void dump_image(Image* image, const char *name, int frame_number) {
 	bc_filename.append(".Cb");
 	bc_filename.append(".mat");
 	printf("Dumping %s\n", bc_filename.c_str());
-	
+
 	dump_matrix(image->gc->data, image->gc->width, image->gc->height, bc_filename.c_str(), image->type);
 
 	gc_filename.append(".Cr");
@@ -209,14 +208,14 @@ void dump_image(Image* image, const char *name, int frame_number) {
 	printf("Dumping %s\n", gc_filename.c_str());
 
 	dump_matrix(image->bc->data, image->bc->width, image->bc->height, gc_filename.c_str(), image->type);
-	
+
 	return;
 }
 
 
 
 void dump_zigzag(Frame* frame, const char *name, int frame_number) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 
 	assert(frame != NULL);
 
@@ -239,7 +238,7 @@ void dump_zigzag(Frame* frame, const char *name, int frame_number) {
 	Cb_filename.append(".Cb");
 	Cb_filename.append(".mat");
 	printf("Dumping %s\n", Cb_filename.c_str());
-	
+
 	dump_matrix(frame->Cb->data, frame->Cb->width, frame->Cb->height, Cb_filename.c_str(), false);
 
 	Cr_filename.append(".Cr");
@@ -250,7 +249,7 @@ void dump_zigzag(Frame* frame, const char *name, int frame_number) {
 }
 
 void dump_dc_diff(Frame* frame, const char *name, int frame_number) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 
 	assert(frame != NULL);
 
@@ -273,7 +272,7 @@ void dump_dc_diff(Frame* frame, const char *name, int frame_number) {
 	Cb_filename.append(".Cb");
 	Cb_filename.append(".mat");
 	printf("Dumping %s\n", Cb_filename.c_str());
-	
+
 	//dump_matrix(frame->Cb, 1, frame->height/4, Cb_filename.c_str(), false);
 	dump_matrix(frame->Cb->data, frame->Cb->width, frame->Cb->height, Cb_filename.c_str(), false);
 
@@ -287,7 +286,7 @@ void dump_dc_diff(Frame* frame, const char *name, int frame_number) {
 
 
 void dump_frame(Frame* frame, const char *name, int frame_number) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 
 	assert(frame != NULL);
 
@@ -310,7 +309,7 @@ void dump_frame(Frame* frame, const char *name, int frame_number) {
 	Cb_filename.append(".Cb");
 	Cb_filename.append(".mat");
 	printf("Dumping %s\n", Cb_filename.c_str());
-	
+
 	dump_matrix(frame->Cb->data, frame->Cb->width, frame->Cb->height, Cb_filename.c_str(), frame->type);
 
 	Cr_filename.append(".Cr");
@@ -321,7 +320,7 @@ void dump_frame(Frame* frame, const char *name, int frame_number) {
 }
 /*
 void dump_motion_vectors(int* motion, int frame_number) {
-	if (!DUMP_TO_DEBUG) return; 
+	if (!DUMP_TO_DEBUG) return;
 	printf("Dumping Motion Vectors\n");
 }
 
@@ -342,7 +341,7 @@ void writestats(int framenum, int is_pframe, double* runtime){
 	file << "********* " << "Frame: " << std::to_string(framenum) << " (" << ftype << ")" << " *********" << std::endl;
 	for(int i=0; i<10; i++){
 		if( !( (i==2 || i==3) && !is_pframe) ){
-			runtime_accum[i] += runtime[i]; 
+			runtime_accum[i] += runtime[i];
 			file << setw(30) << left << function_name[i] << std::setprecision(0) << runtime[i] << "ms" << std::endl;
 		}
 	}
