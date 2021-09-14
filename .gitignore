@@ -2,3 +2,6 @@
 *.o
 .gdb_history
 video_compression/dump
+.cache
+compile_commands.json
+video_compression/c_encoder/ppe/ppe
