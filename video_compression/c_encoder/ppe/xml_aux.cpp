@@ -213,7 +213,7 @@ dump_image (Image *image, const char *name, int frame_number)
 
   assert (image != NULL);
 
-  string filename = "..//..//dump//c//";
+  string filename = "../../dump/c/";
   filename.append (to_string ((long long)frame_number));
   filename.append ("-");
   filename.append (name);
@@ -254,7 +254,7 @@ dump_zigzag (Frame *frame, const char *name, int frame_number)
 
   assert (frame != NULL);
 
-  string filename = "..//..//dump//c//";
+  string filename = "../../dump/c/";
   filename.append (to_string ((long long)frame_number));
   filename.append ("-");
 
@@ -294,7 +294,7 @@ dump_dc_diff (Frame *frame, const char *name, int frame_number)
 
   assert (frame != NULL);
 
-  string filename = "..//..//dump//c//";
+  string filename = "../../dump/c/";
   filename.append (to_string ((long long)frame_number));
   filename.append ("-");
 
@@ -336,7 +336,7 @@ dump_frame (Frame *frame, const char *name, int frame_number)
 
   assert (frame != NULL);
 
-  string filename = "..//..//dump//c//";
+  string filename = "../../dump/c/";
   filename.append (to_string ((long long)frame_number));
   filename.append ("-");
 
