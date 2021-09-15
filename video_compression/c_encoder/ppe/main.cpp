@@ -64,37 +64,35 @@ loadImage (int number, string path, Image **photo)
   TIFFClose (tif);
 }
 
-__attribute__ ((__target__ ("no-sse"))) //
 void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
   int width = in->width;
   int height = in->height;
 
-  for (int col = 0; col < width; col++)
+  for (int x = 0; x < height; x++)
     {
-      for (int row = 0; row < height; row++)
+      for (int y = 0; y < width; y++)
         {
 
-          float R = in->rc->data[row * width + col];
-          float G = in->gc->data[row * width + col];
-          float B = in->bc->data[row * width + col];
+          float R = in->rc->data[x * width + y];
+          float G = in->gc->data[x * width + y];
+          float B = in->bc->data[x * width + y];
           float Y = 0 + ((float)0.299 * R) + ((float)0.587 * G)
                     + ((float)0.113 * B);
           float Cb = 128 - ((float)0.168736 * R) - ((float)0.331264 * G)
                      + ((float)0.5 * B);
           float Cr = 128 + ((float)0.5 * R) - ((float)0.418688 * G)
                      - ((float)0.081312 * B);
-          out->rc->data[row * width + col] = Y;
-          out->gc->data[row * width + col] = Cb;
-          out->bc->data[row * width + col] = Cr;
+          out->rc->data[x * width + y] = Y;
+          out->gc->data[x * width + y] = Cb;
+          out->bc->data[x * width + y] = Cr;
         }
     }
 
   // return out;
 }
 
-__attribute__ ((__target__ ("no-sse"))) //
 Channel *
 lowPass (Channel *in, Channel *out)
 {
@@ -110,28 +108,19 @@ lowPass (Channel *in, Channel *out)
 
   // out = in; TODO Is this necessary?
   for (int i = 0; i < width * height; i++)
-    out->data[i] = in->data[i];
+   out->data[i] = in->data[i];
 
   // In X
-  for (int col = 1; col < (width - 1); col++)
-    {
-      for (int row = 1; row < (height - 1); row++)
+      for (int x = 1; x < (height - 1); x++)
         {
-          out->data[row * width + col]
-              = a * in->data[(row - 1) * width + col]
-                + b * in->data[row * width + col]
-                + c * in->data[(row + 1) * width + col];
-        }
-    }
-  // In Y
-  for (int col = 1; col < (width - 1); col++)
-    {
-      for (int row = 1; row < (height - 1); row++)
-        {
-          out->data[row * width + col]
-              = a * out->data[row * width + (col - 1)]
-                + b * out->data[row * width + col]
-                + c * out->data[row * width + (col + 1)];
+          for (int y = 1; y < (width - 1); y++)
+          {
+          out->data[x * width + y] = a * in->data[(x - 1) * width + y]
+                                     + b * in->data[x * width + y]
+                                     + c * in->data[(x + 1) * width + y];
+          out->data[x * width + y] = a * out->data[x * width + (y - 1)]
+                                     + b * out->data[x * width + y]
+                                     + c * out->data[x * width + (y + 1)];
         }
     }
 
