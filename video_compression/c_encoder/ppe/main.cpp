@@ -64,7 +64,6 @@ loadImage (int number, string path, Image **photo)
   TIFFClose (tif);
 }
 
-__attribute__ ((__target__ ("no-sse")))
 void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
@@ -94,7 +93,6 @@ convertRGBtoYCbCr (Image *in, Image *out)
   // return out;
 }
 
-__attribute__ ((__target__ ("no-sse")))
 Channel *
 lowPass (Channel *in, Channel *out)
 {
