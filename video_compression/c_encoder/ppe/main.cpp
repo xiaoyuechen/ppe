@@ -110,6 +110,7 @@ lowPass (Channel *in, Channel *out)
   int height = in->height;
 
   // out = in; TODO Is this necessary?
+  # pragma omp parallel for
   for (int i = 0; i < width * height; i++)
     out->data[i] = in->data[i];
 
