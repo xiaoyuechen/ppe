@@ -64,14 +64,13 @@ loadImage (int number, string path, Image **photo)
   TIFFClose (tif);
 }
 
-__attribute__ ((__target__ ("no-sse")))
-void
+__attribute__ ((__target__ ("no-sse"))) void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
   int width = in->width;
   int height = in->height;
 
-# pragma omp parallel for
+#pragma omp parallel for
   for (int x = 0; x < height; x++)
     {
       for (int y = 0; y < width; y++)
@@ -95,8 +94,7 @@ convertRGBtoYCbCr (Image *in, Image *out)
   // return out;
 }
 
-__attribute__ ((__target__ ("no-sse")))
-Channel *
+__attribute__ ((__target__ ("no-sse"))) Channel *
 lowPass (Channel *in, Channel *out)
 {
   // Applies a simple 3-tap low-pass filter in the X- and Y- dimensions.
@@ -109,32 +107,30 @@ lowPass (Channel *in, Channel *out)
   int width = in->width;
   int height = in->height;
 
-  // out = in; TODO Is this necessary?
-  //for (int i = 0; i < width * height; i++)
-  //  out->data[i] = in->data[i];
+// out = in; TODO Is this necessary?
+// for (int i = 0; i < width * height; i++)
+//  out->data[i] = in->data[i];
 
-  // In X
-  # pragma omp parallel for
-      for (int x = 1; x < (height - 1); x++)
+// In X
+#pragma omp parallel for
+  for (int x = 1; x < (height - 1); x++)
+    {
+      for (int y = 1; y < (width - 1); y++)
         {
-          for (int y = 1; y < (width - 1); y++)
-          {
           out->data[x * width + y] = a * in->data[(x - 1) * width + y]
                                      + b * in->data[x * width + y]
                                      + c * in->data[(x + 1) * width + y];
         }
     }
-  // In Y
-  # pragma omp parallel for
-      for (int x = 1; x < (height - 1); x++)
-        {
+// In Y
+#pragma omp parallel for
   for (int y = 1; y < (width - 1); y++)
-    {
-          out->data[x * width + y] = a * out->data[x * width + (y - 1)]
-                                     + b * out->data[x * width + y]
-                                     + c * out->data[x * width + (y + 1)];
-        }
-    }
+    for (int x = 1; x < (height - 1); x++)
+      {
+        out->data[x * width + y] = a * out->data[x * width + (y - 1)]
+                                   + b * out->data[x * width + y]
+                                   + c * out->data[x * width + (y + 1)];
+      }
 
   return out;
 }
