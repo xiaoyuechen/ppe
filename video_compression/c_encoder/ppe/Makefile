@@ -19,15 +19,21 @@
 SHELL = /bin/sh
 
 EXEC = ppe
+
+PERF_STAT_RECORD_FILE = perf-stat.data
+PERF_RECORD_EVENTS = task-clock,cycles,instructions,cache-misses,branch-misses
+PERF_RECORD_FILE = perf-record.data
+PERF_CALL_GRAPH_FILE = $(EXEC)-callgraph.png
+
 SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 DEBUG_FLAGS = -g
-PERF_FLAGS = -pg # comment this line out if not using gprof
+PROF_FLAGS =
 
 CXX = g++
 CXXFLAGS = $(DEBUG_FLAGS) $(PERF_FLAGS) -I /usr/include/libxml2/ -fopenmp \
-	-msse4.1 -std=c++17
+	-msse4.1 -mavx2 -std=c++17 -O0
 LDFLAGS = $(PERF_FLAGS)
 LDLIBS = -lxml2 -ltiff -fopenmp
 
@@ -45,3 +51,28 @@ main.o: config.h custom_types.h dct8x8_block.h xml_aux.h
 .PHONY: clean
 clean:
 	rm $(EXEC) $(OBJS)
+
+.PHONY: run
+run:
+	./$(EXEC)
+
+.PHONY: perf-stat-record
+perf-stat-record:
+	perf stat record -o $(PERF_STAT_RECORD_FILE) ./$(EXEC)
+
+.PHONY: perf-stat-report
+perf-stat-report:
+	perf stat report -i $(PERF_STAT_RECORD_FILE)
+
+.PHONY: perf-record
+perf-record:
+	perf record -e $(PERF_RECORD_EVENTS) -g -o $(PERF_RECORD_FILE) ./$(EXEC)
+
+.PHONY: perf-report
+perf-report:
+	perf report --no-children -i $(PERF_RECORD_FILE)
+
+.PHONY: perf-call-graph
+perf-call-graph:
+	perf script | c++filt | gprof2dot -n 4 -f perf | dot -Tpng -o \
+	$(PERF_CALL_GRAPH_FILE)
