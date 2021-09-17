@@ -6,3 +6,8 @@ video_compression/dump
 compile_commands.json
 video_compression/c_encoder/ppe/ppe
 video_compression/outputs
+*.log
+report.pdf
+*.synctex.gz
+*.aux
+auto

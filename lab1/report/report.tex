@@ -1,0 +1,149 @@
+\documentclass{article} \usepackage[utf8]{inputenc}
+% \usepackage{tabularx}
+
+\title{Lab 1} \author{Hannah Atmer and Xiaoyue Chen \\ Team 6}
+\date{September 2021}
+
+\begin{document}
+
+\maketitle
+\section{Performance Estimates}
+\subsection{Our Hardware}
+
+\begin{tabular}{l | l}
+Architecture:                    & x86\_64 \\
+CPU op-mode(s):                  & 32-bit, 64-bit \\
+CPU(s):                          & 12 \\
+Model name:                      & Intel(R) Core(TM) i7-8750H CPU \@
+                                   2.20GHz \\
+CPU family:                      & 6 \\
+Model:                           & 158 \\
+Thread(s) per core:              & 2 \\
+Core(s) per socket:              & 6 \\
+Socket(s):                       & 1 \\
+CPU max MHz:                     & 4100.0000 \\
+CPU min MHz:                     & 800.0000 \\
+Cache line:                      & 64 B \\
+L1d cache:                       & 192 KiB (6 instances) \\
+L1i cache:                       & 192 KiB (6 instances) \\
+L2 cache:                        & 1.5 MiB (6 instances) \\
+L3 cache:                        & 9 MiB (1 instance) \\
+\end{tabular}
+
+
+
+
+
+Your estimates of the performance benefits of each of the
+optimizations and how you came up with them.
+
+
+
+\begin{tabularx}{0.8\textwidth} {
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X | }
+\hline
+Optimization & Predicted Impact & Why \\
+\hline
+
+B  & 1.0  & Baseline  \\
+\hline
+C  & x3 while memory bounded & Raise the sloping part of roof and move ridge to the left, i.e. improve memory-bounded performance  \\
+\hline
+S  & less than x4 since lack of cache affinity will make the program memory bounded & SIMD allows for x4 FLOPS/sec. This raises the flat part of roof, i.e. increase maximum possible CPU-bounded performance x4, and moves the ridge to the right, meaning higher operational intensity is required to achieve this level of performance \\
+\hline
+P  &  at most xN, where N is number of cores  & Parallelizing loops will improve performance depending on how many cores used and on Amdahl's law \\
+\hline
+C + S  & x4  & SIMD makes the program much more operationally intensive. Performance will be CPU bounded since the cache is not a bottleneck.   \\
+\hline
+C + P  & at most xN  & parallelization increases operational intensity \\
+\hline
+S + P  & x4 - x4N  & parallel SIMD will be more operationally intensive than just SIMD  \\
+\hline
+C + S + P  & item  & item  \\
+\hline
+
+
+\end{tabularx}
+
+
+\section{Performance Achieved}
+
+\subsection{Measured performance results from implementing the
+  optimizations}
+
+\begin{tabularx}{1.3\textwidth} {
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X  | }
+\hline
+& B & C & S & P & C + S & C + P & S + P & C + S + P\\
+\hline
+
+Measured Time  & item  & item & item & item & item & item & item & item \\
+\hline
+Predicted Speedup  & item  & item & item & item & item & item & item & item  \\
+\hline
+Measured Speedup  & item  & item & item & item & item & item & item & item \\
+\hline
+
+
+
+\end{tabularx}
+
+\subsection{Parallel scaling of your implementation}
+
+\begin{tabularx}{0.8\textwidth} {
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X
+  | >{\centering\arraybackslash}X | }
+\hline
+& 1 Core & 2 Cores & 4 Cores \\
+\hline
+
+P  & item  & item & item \\
+\hline
+C + P  & item  & item & item \\
+\hline
+S + P & item  & item  & item\\
+\hline
+C + S + P  & item  & item  & item\\
+\hline
+
+
+\end{tabularx}
+
+
+
+\section{Discussion}
+
+A discussion of the measured results and how they differ from your
+predictions.
+
+A discussion of what you learned about these optimizations from
+implementing them and measuring the results.
+
+Comment on any unexpected or odd results.
+
+Comments on the difficulty of each optimization.
+
+Comment on what the compiler did for you.
+
+\section{Lab comments}
+Any feedback on the lab itself.
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
