@@ -71,6 +71,7 @@ convertRGBtoYCbCr (Image *in, Image *out)
   int width = in->width;
   int height = in->height;
 
+# pragma omp parallel for
   for (int x = 0; x < height; x++)
     {
       for (int y = 0; y < width; y++)
@@ -113,6 +114,7 @@ lowPass (Channel *in, Channel *out)
   //  out->data[i] = in->data[i];
 
   // In X
+  # pragma omp parallel for
       for (int x = 1; x < (height - 1); x++)
         {
           for (int y = 1; y < (width - 1); y++)
@@ -120,6 +122,14 @@ lowPass (Channel *in, Channel *out)
           out->data[x * width + y] = a * in->data[(x - 1) * width + y]
                                      + b * in->data[x * width + y]
                                      + c * in->data[(x + 1) * width + y];
+        }
+    }
+  // In Y
+  # pragma omp parallel for
+      for (int x = 1; x < (height - 1); x++)
+        {
+  for (int y = 1; y < (width - 1); y++)
+    {
           out->data[x * width + y] = a * out->data[x * width + (y - 1)]
                                      + b * out->data[x * width + y]
                                      + c * out->data[x * width + (y + 1)];
