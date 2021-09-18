@@ -13,6 +13,7 @@ function decode()
 	
 	% File to load
 	xml_stream = settings.stream_path;
+    xml_stream = "../outputs/stream_c_blooper.xml";
     
 
     
@@ -444,7 +445,7 @@ end
 function blocks = unZigZagBlocks(decoded_blocks)
     % Loads the zigZagIndex variable from a file. This let us change
     % the order without changing the code.
-    load('zigZagindex.mat');
+    load('zigZagIndex.mat');
 	blocks=cell(size(decoded_blocks));
 	for i=1:size(decoded_blocks,1)
 		zigZagged = decoded_blocks{i};
