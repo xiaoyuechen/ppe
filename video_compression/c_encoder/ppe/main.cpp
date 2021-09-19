@@ -107,17 +107,24 @@ lowPass (Channel *in, Channel *out)
   int height = in->height;
 
   // out = in; TODO Is this necessary?
-  //for (int i = 0; i < width * height; i++)
+  // for (int i = 0; i < width * height; i++)
   //  out->data[i] = in->data[i];
 
   // In X
-      for (int x = 1; x < (height - 1); x++)
+  for (int x = 1; x < (height - 1); x++)
+    {
+      for (int y = 1; y < (width - 1); y++)
         {
-          for (int y = 1; y < (width - 1); y++)
-          {
           out->data[x * width + y] = a * in->data[(x - 1) * width + y]
                                      + b * in->data[x * width + y]
                                      + c * in->data[(x + 1) * width + y];
+        }
+    }
+
+  for (int x = 1; x < (height - 1); x++)
+    {
+      for (int y = 1; y < (width - 1); y++)
+        {
           out->data[x * width + y] = a * out->data[x * width + (y - 1)]
                                      + b * out->data[x * width + y]
                                      + c * out->data[x * width + (y + 1)];
