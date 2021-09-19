@@ -56,6 +56,10 @@ clean:
 run:
 	./$(EXEC)
 
+.PHONY: test
+test:
+	matlab -sd ../../ml_encoder -batch compare_encoders
+
 .PHONY: perf-stat-record
 perf-stat-record:
 	perf stat record -o $(PERF_STAT_RECORD_FILE) ./$(EXEC)
