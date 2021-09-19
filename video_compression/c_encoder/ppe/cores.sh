@@ -1,7 +1,7 @@
 #!/bin/bash
 
 git checkout master
-for b in "p" "c+p" "s+p" "c+s+p"
+for b in "openmp" "c+p" "s+p" "c+s+p"
 do
   git checkout $b
   for c in 1 2 4
