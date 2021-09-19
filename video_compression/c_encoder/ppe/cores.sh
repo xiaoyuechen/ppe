@@ -1,12 +1,13 @@
 #!/bin/bash
 
 git checkout master
-for b in "P" "C+P" "S+P" "C+S+P"
+for b in "p" "c+p" "s+p" "c+s+p"
 do
   git checkout $b
   for c in 1 2 4
   do
     OMP_NUM_THREADS=$c
+    make clean
     make
     make perf-stat-record
     echo "========== Branch: $b, cores: $c ==============="
@@ -14,4 +15,3 @@ do
     echo "================================================"
   done
 done
-
