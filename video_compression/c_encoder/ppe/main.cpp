@@ -4,6 +4,7 @@
 #include "xml_aux.h"
 #include <iostream>
 #include <math.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,18 +65,17 @@ loadImage (int number, string path, Image **photo)
   TIFFClose (tif);
 }
 
-__attribute__ ((__target__ ("no-sse"))) //
 void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
   int width = in->width;
   int height = in->height;
 
-  for (int col = 0; col < width; col++)
+#pragma omp parallel for
+  for (int row = 0; row < height; row++)
     {
-      for (int row = 0; row < height; row++)
+      for (int col = 0; col < width; col++)
         {
-
           float R = in->rc->data[row * width + col];
           float G = in->gc->data[row * width + col];
           float B = in->bc->data[row * width + col];
@@ -94,46 +94,52 @@ convertRGBtoYCbCr (Image *in, Image *out)
   // return out;
 }
 
-__attribute__ ((__target__ ("no-sse"))) //
 Channel *
 lowPass (Channel *in, Channel *out)
 {
   // Applies a simple 3-tap low-pass filter in the X- and Y- dimensions.
   // E.g., blur
   // weights for neighboring pixels
-  float a = 0.25;
-  float b = 0.5;
-  float c = 0.25;
+  const float a = 0.25;
+  const float b = 0.5;
+  const float c = 0.25;
 
   int width = in->width;
   int height = in->height;
 
-  // out = in; TODO Is this necessary?
+// out = in; TODO Is this necessary?
+#pragma omp parallel for
   for (int i = 0; i < width * height; i++)
     out->data[i] = in->data[i];
 
-  // In X
-  for (int col = 1; col < (width - 1); col++)
-    {
-      for (int row = 1; row < (height - 1); row++)
+    // In X
+#pragma omp parallel
+  {
+    int columns_per_thread
+        = (width + omp_get_num_threads () - 1) / omp_get_num_threads ();
+    int col_begin = 1 + omp_get_thread_num () * columns_per_thread;
+    int col_end = col_begin + columns_per_thread;
+
+    for (int row = 1; row < height - 1; row++)
+      for (int col = col_begin; col < std::min (col_end, width - 1); col++)
         {
           out->data[row * width + col]
               = a * in->data[(row - 1) * width + col]
                 + b * in->data[row * width + col]
                 + c * in->data[(row + 1) * width + col];
         }
-    }
+  }
+
+#pragma omp parallel for
+  for (int row = 1; row < (height - 1); row++)
+    for (int col = 1; col < (width - 1); col++)
+      {
+        out->data[row * width + col]
+            = a * out->data[row * width + (col - 1)]
+              + b * out->data[row * width + col]
+              + c * out->data[row * width + (col + 1)];
+      }
   // In Y
-  for (int col = 1; col < (width - 1); col++)
-    {
-      for (int row = 1; row < (height - 1); row++)
-        {
-          out->data[row * width + col]
-              = a * out->data[row * width + (col - 1)]
-                + b * out->data[row * width + col]
-                + c * out->data[row * width + (col + 1)];
-        }
-    }
 
   return out;
 }
