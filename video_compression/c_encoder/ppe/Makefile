@@ -78,5 +78,5 @@ perf-report:
 
 .PHONY: perf-call-graph
 perf-call-graph:
-	perf script | c++filt | gprof2dot -n 4 -f perf | dot -Tpng -o \
+	perf script -i $(PERF_RECORD_FILE) | c++filt | gprof2dot -n 4 -f perf | dot -Tpng -o \
 	$(PERF_CALL_GRAPH_FILE)
