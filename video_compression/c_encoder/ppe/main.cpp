@@ -1,3 +1,4 @@
+#include "cmd_args.h"
 #include "config.h"
 #include "custom_types.h"
 #include "dct8x8_block.h"
@@ -15,6 +16,8 @@
 #include <vector>
 
 using namespace std;
+
+Args args;
 
 void
 loadImage (int number, string path, Image **photo)
@@ -786,8 +789,9 @@ encode ()
 }
 
 int
-main (int args, char **argv)
+main (int argc, char *argv[])
 {
+  args = parseArgs (argc, argv);
   encode ();
   return 0;
 }
