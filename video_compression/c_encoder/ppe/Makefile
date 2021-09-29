@@ -33,7 +33,7 @@ PROF_FLAGS =
 
 CXX = g++
 CXXFLAGS = $(DEBUG_FLAGS) $(PERF_FLAGS) -I /usr/include/libxml2/ -fopenmp \
-	-msse4.1 -mavx2 -std=c++17 -O0
+	-std=c++17 -O0
 LDFLAGS = $(PERF_FLAGS)
 LDLIBS = -lxml2 -ltiff -fopenmp
 
