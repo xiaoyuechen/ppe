@@ -32,8 +32,7 @@ DEBUG_FLAGS = -g
 PROF_FLAGS =
 
 CXX = g++
-CXXFLAGS = $(DEBUG_FLAGS) $(PERF_FLAGS) -I /usr/include/libxml2/ -fopenmp \
-	-std=c++17 -O0
+CXXFLAGS = $(DEBUG_FLAGS) $(PERF_FLAGS) -I /usr/include/libxml2/ -fopenmp -l OpenCL -I /usr/lib/aarch64-linux-gnu/libOpenCL.so  -std=c++17 -O0
 LDFLAGS = $(PERF_FLAGS)
 LDLIBS = -lxml2 -ltiff -fopenmp
 

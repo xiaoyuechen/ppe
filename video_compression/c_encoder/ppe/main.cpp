@@ -14,7 +14,7 @@
 #include <tiff.h>
 #include <tiffio.h>
 #include <vector>
-#include <CL/cl.h>
+#include <CL/cl.hpp>
 
 using namespace std;
 
@@ -128,9 +128,9 @@ convertRGBtoYCbCr (Image *in, Image *out)
   for (int row = 0; row < height; row++)
   {
     // Copy data to GPU
-    ret = clEnqueueWriteBuffer(command_queue, r_mem_obj, CL_TRUE, 0, width * sizeof(float), in->rc->data[row], 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(command_queue, g_mem_obj, CL_TRUE, 0, width * sizeof(float), in->gc->data[row], 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(command_queue, b_mem_obj, CL_TRUE, 0, width * sizeof(float), in->bc->data[row], 0, NULL, NULL);
+    ret = clEnqueueWriteBuffer(command_queue, r_mem_obj, CL_TRUE, 0, width * sizeof(float), &(in->rc->data[row]), 0, NULL, NULL);
+    ret = clEnqueueWriteBuffer(command_queue, g_mem_obj, CL_TRUE, 0, width * sizeof(float), &(in->gc->data[row]), 0, NULL, NULL);
+    ret = clEnqueueWriteBuffer(command_queue, b_mem_obj, CL_TRUE, 0, width * sizeof(float), &(in->bc->data[row]), 0, NULL, NULL);
 
     // Set the arguments of the kernel
     ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&r_mem_obj);
@@ -143,9 +143,9 @@ convertRGBtoYCbCr (Image *in, Image *out)
     ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
     
     // Copy data back from the GPU
-    ret = clEnqueueReadBuffer(command_queue, rc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->rc->data[row], 0, NULL, NULL);
-    ret = clEnqueueReadBuffer(command_queue, gc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->gc->data[row], 0, NULL, NULL);
-    ret = clEnqueueReadBuffer(command_queue, bc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->bc->data[row], 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(command_queue, rc_mem_obj, CL_TRUE, 0, width * sizeof(float), &(out->rc->data[row]), 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(command_queue, gc_mem_obj, CL_TRUE, 0, width * sizeof(float), &(out->gc->data[row]), 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(command_queue, bc_mem_obj, CL_TRUE, 0, width * sizeof(float), &(out->bc->data[row]), 0, NULL, NULL);
 
     // Clean up
     ret = clFlush(command_queue);
@@ -160,7 +160,6 @@ convertRGBtoYCbCr (Image *in, Image *out)
     ret = clReleaseMemObject(gc_mem_obj);
     ret = clReleaseCommandQueue(command_queue);
     ret = clReleaseContext(context);
-    return 0;
   }
 
 }
