@@ -83,7 +83,8 @@ convertRGBtoYCbCr (Image *in, Image *out)
   char *source_str;
   size_t source_size;
 
-  fp = fopen("vector_add_kernel.cl", "r");
+  // open kernel file
+  fp = fopen("kernel.cl", "r");
   if (!fp) {
       fprintf(stderr, "Failed to load kernel.\n");
       exit(1);
@@ -92,55 +93,76 @@ convertRGBtoYCbCr (Image *in, Image *out)
   source_size = fread( source_str, 1, MAX_SOURCE_SIZE, fp);
   fclose( fp );
 
-      // Get platform and device information
-    cl_platform_id platform_id = NULL;
-    cl_device_id device_id = NULL;   
-    cl_uint ret_num_devices;
-    cl_uint ret_num_platforms;
-    cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-    ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_DEFAULT, 1, 
-            &device_id, &ret_num_devices);
- 
-    // Create an OpenCL context
-    cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret);
- 
-    // Create a command queue
-    cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
- 
-    // Create memory buffers on the device for each vector 
-    cl_mem r_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
-    cl_mem g_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
-    cl_mem b_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
-    
-    cl_mem rc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
-    cl_mem gc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
-    cl_mem bc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
+  // Get platform and device information
+  cl_platform_id platform_id = NULL;
+  cl_device_id device_id = NULL;   
+  cl_uint ret_num_devices;
+  cl_uint ret_num_platforms;
+  cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
+  ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_DEFAULT, 1, &device_id, &ret_num_devices);
+
+  // Create an OpenCL context
+  cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret);
+
+  // Create a command queue
+  cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+
+  // Create memory buffers on the device for each vector 
+  cl_mem r_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
+  cl_mem g_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
+  cl_mem b_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, width * sizeof(float), NULL, &ret);
+  
+  cl_mem rc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
+  cl_mem gc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
+  cl_mem bc_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, width * sizeof(float), NULL, &ret);
+
+  // Create a program from the kernel source
+  cl_program program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
+
+  // Build the program
+  ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+
+  // Create the OpenCL kernel
+  cl_kernel kernel = clCreateKernel(program, "convertRGBtoYCbCr", &ret);
 
   for (int row = 0; row < height; row++)
-    {
-      ret = clEnqueueWriteBuffer(command_queue, r_mem_obj, CL_TRUE, 0, width * sizeof(float), in->rc->data[row], 0, NULL, NULL);
+  {
+    // Copy data to GPU
+    ret = clEnqueueWriteBuffer(command_queue, r_mem_obj, CL_TRUE, 0, width * sizeof(float), in->rc->data[row], 0, NULL, NULL);
     ret = clEnqueueWriteBuffer(command_queue, g_mem_obj, CL_TRUE, 0, width * sizeof(float), in->gc->data[row], 0, NULL, NULL);
     ret = clEnqueueWriteBuffer(command_queue, b_mem_obj, CL_TRUE, 0, width * sizeof(float), in->bc->data[row], 0, NULL, NULL);
 
-      for (int col = 0; col < width; col++)
-        {
+    // Set the arguments of the kernel
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&r_mem_obj);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&g_mem_obj);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&b_mem_obj);
 
-          float R = in->rc->data[row * width + col];
-          float G = in->gc->data[row * width + col];
-          float B = in->bc->data[row * width + col];
-          float Y = 0 + ((float)0.299 * R) + ((float)0.587 * G)
-                    + ((float)0.113 * B);
-          float Cb = 128 - ((float)0.168736 * R) - ((float)0.331264 * G)
-                     + ((float)0.5 * B);
-          float Cr = 128 + ((float)0.5 * R) - ((float)0.418688 * G)
-                     - ((float)0.081312 * B);
-          out->rc->data[row * width + col] = Y;
-          out->gc->data[row * width + col] = Cb;
-          out->bc->data[row * width + col] = Cr;
-        }
-    }
+    // Execute the OpenCL kernel
+    size_t global_item_size = width; // Process the entire row
+    size_t local_item_size = 64; // Divide work items into groups of 64
+    ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
+    
+    // Copy data back from the GPU
+    ret = clEnqueueReadBuffer(command_queue, rc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->rc->data[row], 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(command_queue, gc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->gc->data[row], 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(command_queue, bc_mem_obj, CL_TRUE, 0, width * sizeof(float), out->bc->data[row], 0, NULL, NULL);
 
-  // return out;
+    // Clean up
+    ret = clFlush(command_queue);
+    ret = clFinish(command_queue);
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(r_mem_obj);
+    ret = clReleaseMemObject(b_mem_obj);
+    ret = clReleaseMemObject(g_mem_obj);
+    ret = clReleaseMemObject(rc_mem_obj);
+    ret = clReleaseMemObject(bc_mem_obj);
+    ret = clReleaseMemObject(gc_mem_obj);
+    ret = clReleaseCommandQueue(command_queue);
+    ret = clReleaseContext(context);
+    return 0;
+  }
+
 }
 
 
