@@ -25,7 +25,7 @@ PERF_RECORD_EVENTS = task-clock,cycles,instructions,cache-misses,branch-misses
 PERF_RECORD_FILE = perf-record.data
 PERF_CALL_GRAPH_FILE = $(EXEC)-callgraph.png
 
-SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp
+SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp cmd_args.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 DEBUG_FLAGS = -g
@@ -46,7 +46,8 @@ $(EXEC): $(OBJS)
 custom_types.o: custom_types.h config.h
 dct8x8_block.o: dct8x8_block.h
 xml_aux.o: xml_aux.h config.h
-main.o: config.h custom_types.h dct8x8_block.h xml_aux.h
+cmd_args.o: cmd_args.h
+main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h
 
 .PHONY: clean
 clean:

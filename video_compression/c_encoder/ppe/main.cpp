@@ -1,3 +1,4 @@
+#include "cmd_args.h"
 #include "config.h"
 #include "custom_types.h"
 #include "dct8x8_block.h"
@@ -18,6 +19,7 @@
 using namespace std;
 
 #define MAX_SOURCE_SIZE (0x100000)
+Args args;
 
 void
 loadImage (int number, string path, Image **photo)
@@ -837,8 +839,9 @@ encode ()
 }
 
 int
-main (int args, char **argv)
+main (int argc, char *argv[])
 {
+  args = parseArgs (argc, argv);
   encode ();
   return 0;
 }
