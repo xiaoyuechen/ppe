@@ -18,23 +18,28 @@
 
 SHELL = /bin/sh
 
-EXEC = ppe
+EXEC = cencoder
 
 PERF_STAT_RECORD_FILE = perf-stat.data
 PERF_RECORD_EVENTS = task-clock,cycles,instructions,cache-misses,branch-misses
 PERF_RECORD_FILE = perf-record.data
 PERF_CALL_GRAPH_FILE = $(EXEC)-callgraph.png
 
-SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp cmd_args.cpp
-OBJS = $(SRCS:.cpp=.o)
+CXX_SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp
+C_SRCS = cmd_args.c opt_opencl.c
+OBJS = $(CXX_SRCS:.cpp=.o) $(C_SRCS:.c=.o)
 
 DEBUG_FLAGS = -g
-PROF_FLAGS =
 
+CC = gcc
 CXX = g++
-CXXFLAGS = $(DEBUG_FLAGS) $(PERF_FLAGS) -I /usr/include/libxml2/ -fopenmp -l OpenCL -I /usr/lib/aarch64-linux-gnu/libOpenCL.so  -std=c++17 -O0
+
+CPPFLAGS = $(DEBUG_FLAGS) -I /usr/include/libxml2/ -fopenmp \
+	-msse4.1 -mavx2 -O0
+CFLAGS = -std=c99
+CXXFLAGS = -std=c++17
 LDFLAGS = $(PERF_FLAGS)
-LDLIBS = -lxml2 -ltiff -fopenmp
+LDLIBS = -lxml2 -ltiff -fopenmp -lOpenCL
 
 .PHONY: all
 all: $(EXEC)
@@ -46,7 +51,8 @@ custom_types.o: custom_types.h config.h
 dct8x8_block.o: dct8x8_block.h
 xml_aux.o: xml_aux.h config.h
 cmd_args.o: cmd_args.h
-main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h
+opt_opencl.o: opt_opencl.h
+main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h opt_opencl.h
 
 .PHONY: clean
 clean:

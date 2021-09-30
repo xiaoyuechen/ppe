@@ -1,11 +1,14 @@
 #ifndef CMD_ARGS_H
 #define CMD_ARGS_H
 
-#include <cstdint>
+#include <stdint.h>
 
-struct Args
+#ifdef __cplusplus
+extern "C"
 {
-  enum class Opt : std::uint8_t
+#endif
+
+  enum Optimization
   {
     Cache = 1,
     SIMD = 1 << 1,
@@ -13,9 +16,16 @@ struct Args
     OpenCL = 1 << 3,
   };
 
-  std::uint8_t optimization_mode = 0;
-};
+  typedef struct Args
+  {
+    uint8_t optimization_mode;
+    int opencl_num_threads;
+  } Args;
 
-Args parseArgs(int argc, char* argv[]);
+  Args parseArgs (int argc, char *argv[]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
