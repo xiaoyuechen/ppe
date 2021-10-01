@@ -41,6 +41,7 @@ loadImage (int number, string path, Image **photo)
 
   TIFFGetField (tif, TIFFTAG_IMAGEWIDTH, &w);
   TIFFGetField (tif, TIFFTAG_IMAGELENGTH, &h);
+
   npixels = w * h;
   raster = (uint32_t *)_TIFFmalloc (npixels * sizeof (uint32_t));
 
@@ -71,61 +72,36 @@ loadImage (int number, string path, Image **photo)
 }
 
 void
+convertOMP (size_t size, float *in[3], float *out[3])
+{
+#pragma omp parallel for
+  for (int i = 0; i < size; ++i)
+    {
+      float R = in[0][i];
+      float G = in[1][i];
+      float B = in[2][i];
+      float Y
+          = 0 + ((float)0.299 * R) + ((float)0.587 * G) + ((float)0.113 * B);
+      float Cb = 128 - ((float)0.168736 * R) - ((float)0.331264 * G)
+                 + ((float)0.5 * B);
+      float Cr = 128 + ((float)0.5 * R) - ((float)0.418688 * G)
+                 - ((float)0.081312 * B);
+      out[0][i] = Y;
+      out[1][i] = Cb;
+      out[2][i] = Cr;
+    }
+}
+
+void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
-  int width = in->width;
-  int height = in->height;
-
-  // for (int row = 0; row < height; row++)
-  //   {
-  //     // Copy data to GPU
-  //     ret = clEnqueueWriteBuffer (command_queue, r_mem_obj, CL_TRUE, 0,
-  //                                 width * sizeof (float), &(in->rc->data[row]),
-  //                                 0, NULL, NULL);
-  //     ret = clEnqueueWriteBuffer (command_queue, g_mem_obj, CL_TRUE, 0,
-  //                                 width * sizeof (float), &(in->gc->data[row]),
-  //                                 0, NULL, NULL);
-  //     ret = clEnqueueWriteBuffer (command_queue, b_mem_obj, CL_TRUE, 0,
-  //                                 width * sizeof (float), &(in->bc->data[row]),
-  //                                 0, NULL, NULL);
-
-  //     // Set the arguments of the kernel
-  //     ret = clSetKernelArg (kernel, 0, sizeof (cl_mem), (void *)&r_mem_obj);
-  //     ret = clSetKernelArg (kernel, 1, sizeof (cl_mem), (void *)&g_mem_obj);
-  //     ret = clSetKernelArg (kernel, 2, sizeof (cl_mem), (void *)&b_mem_obj);
-
-  //     // Execute the OpenCL kernel
-  //     size_t global_item_size = width; // Process the entire row
-  //     size_t local_item_size = 64;     // Divide work items into groups of 64
-  //     ret = clEnqueueNDRangeKernel (command_queue, kernel, 1, NULL,
-  //                                   &global_item_size, &local_item_size, 0,
-  //                                   NULL, NULL);
-
-  //     // Copy data back from the GPU
-  //     ret = clEnqueueReadBuffer (command_queue, rc_mem_obj, CL_TRUE, 0,
-  //                                width * sizeof (float), &(out->rc->data[row]),
-  //                                0, NULL, NULL);
-  //     ret = clEnqueueReadBuffer (command_queue, gc_mem_obj, CL_TRUE, 0,
-  //                                width * sizeof (float), &(out->gc->data[row]),
-  //                                0, NULL, NULL);
-  //     ret = clEnqueueReadBuffer (command_queue, bc_mem_obj, CL_TRUE, 0,
-  //                                width * sizeof (float), &(out->bc->data[row]),
-  //                                0, NULL, NULL);
-
-  //     // Clean up
-  //     ret = clFlush (command_queue);
-  //     ret = clFinish (command_queue);
-  //     ret = clReleaseKernel (kernel);
-  //     ret = clReleaseProgram (program);
-  //     ret = clReleaseMemObject (r_mem_obj);
-  //     ret = clReleaseMemObject (b_mem_obj);
-  //     ret = clReleaseMemObject (g_mem_obj);
-  //     ret = clReleaseMemObject (rc_mem_obj);
-  //     ret = clReleaseMemObject (bc_mem_obj);
-  //     ret = clReleaseMemObject (gc_mem_obj);
-  //     ret = clReleaseCommandQueue (command_queue);
-  //     ret = clReleaseContext (context);
-  //   }
+  int size = in->width * in->height;
+  float *in_array[3] = { in->rc->data, in->gc->data, in->bc->data };
+  float *out_array[3] = { out->rc->data, out->gc->data, out->bc->data };
+  if (args.optimization_mode & OpenMP)
+    convertOMP (size, in_array, out_array);
+  else if (args.optimization_mode & OpenCL)
+    convertCL (size, in_array, out_array);
 }
 
 Channel *
@@ -587,7 +563,10 @@ encode ()
   int height = frame_rgb->height;
   int npixels = width * height;
 
-  delete frame_rgb;
+  if (args.optimization_mode & OpenCL)
+    {
+      initCL (width, height);
+    }
 
   createStatsFile ();
   stream = create_xml_stream (width, height, QUALITY, WINDOW_SIZE, BLOCK_SIZE);
@@ -595,13 +574,13 @@ encode ()
 
   for (int frame_number = 0; frame_number < end_frame; frame_number++)
     {
-      frame_rgb = NULL;
       loadImage (frame_number, image_path, &frame_rgb);
 
       //  Convert to YCbCr
       print ("Covert to YCbCr...");
 
       Image *frame_ycbcr = new Image (width, height, FULLSIZE);
+
       gettimeofday (&starttime, NULL);
       convertRGBtoYCbCr (frame_rgb, frame_ycbcr);
       gettimeofday (&endtime, NULL);
@@ -611,7 +590,6 @@ encode ()
                    - double (starttime.tv_usec) / 1000.0f; // in ms
 
       dump_image (frame_ycbcr, "frame_ycbcr", frame_number);
-      delete frame_rgb;
 
       // We low pass filter Cb and Cr channesl
       print ("Low pass filter...");
@@ -821,7 +799,8 @@ encode ()
 int
 main (int argc, char *argv[])
 {
-  Args args = parseArgs (argc, argv);
+  args = parseArgs (argc, argv);
+
   encode ();
   return 0;
 }
