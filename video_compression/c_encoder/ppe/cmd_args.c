@@ -10,9 +10,10 @@ static const char doc[] = "cencoder -- a JPEG video encoder";
 #define OPT_CL_NUM_THD 1
 
 static const struct argp_option argp_options[]
-    = { { "cl", 'c', 0, 0, "Use OpenCL optimization" },
+    = { { "cl", 'c', 0, 0, "Use OpenCL optimisation" },
         { "cl_num_thd", OPT_CL_NUM_THD, "NUM", 0,
           "Use NUM threads for OpenCL" },
+        { "omp", 'm', 0, 0, "Use OpenMP optimisation" },
         { 0 } };
 
 static error_t
@@ -27,6 +28,9 @@ ParseOpt (int key, char *arg, struct argp_state *state)
       break;
     case OPT_CL_NUM_THD:
       args->opencl_num_threads = strtol (arg, 0, 10);
+      break;
+    case 'm':
+      args->optimization_mode |= OpenMP;
       break;
     default:
       return ARGP_ERR_UNKNOWN;
