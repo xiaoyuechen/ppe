@@ -565,7 +565,7 @@ encode ()
 
   if (args.optimization_mode & OpenCL)
     {
-      initCL (width, height);
+      initCL (width, height, stderr);
     }
 
   createStatsFile ();

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 extern int errno;
 static cl_int cl_err;
@@ -212,6 +213,14 @@ EnqueueWriteBuffer (cl_command_queue cmdq, cl_mem buff, size_t size,
     CL_Error ("Error enqueueing write buffer");
 }
 
+uint32_t
+GetTimevalMicroSeconds (const struct timeval *start,
+                        const struct timeval *stop)
+{
+  return ((stop->tv_sec - start->tv_sec) * 1000000 + stop->tv_usec
+          - start->tv_usec);
+}
+
 static cl_device_id device_id;
 static cl_context context;
 static cl_program program;
@@ -221,10 +230,15 @@ static float *pinned_mem[3];
 static cl_mem pinned_buf[3];
 static cl_mem buf[3];
 static int width, height;
+static FILE *output_file;
 
 void
-initCL (int pwidth, int pheight)
+initCL (int pwidth, int pheight, FILE *fd)
 {
+  struct timeval start, stop;
+  gettimeofday (&start, 0);
+
+  output_file = fd;
   width = pwidth;
   height = pheight;
 
@@ -239,11 +253,19 @@ initCL (int pwidth, int pheight)
       size_t size = width * height * sizeof (float);
       buf[i] = CreateBuffer (context, size);
     }
+  clFinish (cmd_queue);
+
+  gettimeofday (&stop, 0);
+  uint32_t t = GetTimevalMicroSeconds (&start, &stop);
+  fprintf (output_file, "CL init time: %u\n", t);
 }
 
 void
 convertCL (int size, float *in[3], float *out[3])
 {
+  struct timeval start, stop;
+  gettimeofday (&start, 0);
+
   for (size_t c = 0; c < 3; ++c)
     {
       EnqueueWriteBuffer (cmd_queue, buf[c], size * sizeof (float), in[c]);
@@ -251,13 +273,24 @@ convertCL (int size, float *in[3], float *out[3])
       if (cl_err)
         CL_Error ("Error setting kernel arg");
     }
+  clFinish (cmd_queue);
+  gettimeofday (&stop, 0);
+  fprintf (output_file, "CL copy h2d time: %u\n",
+           GetTimevalMicroSeconds (&start, &stop));
 
+  gettimeofday (&start, 0);
   size_t global_item_size[] = { size, 0, 0 };
   cl_err = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, 0,
                                    global_item_size, 0, 0, 0, 0);
   if (cl_err)
     CL_Error ("Error enqueueing range kernel");
 
+  clFinish (cmd_queue);
+  gettimeofday (&stop, 0);
+  fprintf (output_file, "CL kernel execution time: %u\n",
+           GetTimevalMicroSeconds (&start, &stop));
+
+  gettimeofday (&start, 0);
   for (size_t c = 0; c < 3; ++c)
     {
       cl_err = clEnqueueReadBuffer (cmd_queue, buf[c], CL_FALSE, 0,
@@ -269,4 +302,8 @@ convertCL (int size, float *in[3], float *out[3])
   cl_err = clFinish (cmd_queue);
   if (cl_err)
     CL_Error ("Error finishing convert command queue");
+
+  gettimeofday (&stop, 0);
+  fprintf (output_file, "CL copy d2h time: %u\n",
+           GetTimevalMicroSeconds (&start, &stop));
 }
