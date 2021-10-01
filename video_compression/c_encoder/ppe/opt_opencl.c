@@ -120,8 +120,7 @@ CreateContext (cl_device_id *device_id)
   printf ("Using GPU: %s\n", device_name);
 
   // Create an OpenCL context
-  cl_context context
-      = clCreateContext (NULL, 1, device_id, NULL, NULL, &cl_err);
+  cl_context context = clCreateContext (0, 1, device_id, 0, 0, &cl_err);
   if (cl_err)
     CL_Error ("Error creating cl context");
 
@@ -231,7 +230,7 @@ initCL (int pwidth, int pheight)
 
   context = CreateContext (&device_id);
   program = CreateProgram ("kernel.cl", context);
-  convert_kernel = CreateKernel (program, "convertRGBtoYCbCr");
+  convert_kernel = CreateKernel (program, "convert");
   cmd_queue = CreateCommandQueue (context, device_id);
 
   // Create memory buffers on the device for each channel
@@ -243,31 +242,31 @@ initCL (int pwidth, int pheight)
 }
 
 void
-convertCL (int size, float **in, float **out)
+convertCL (int size, float *in[3], float *out[3])
 {
   for (size_t c = 0; c < 3; ++c)
     {
-      EnqueueWriteBuffer (cmd_queue, buf[c], width * height * sizeof (float),
-                          in[c]);
+      EnqueueWriteBuffer (cmd_queue, buf[c], size * sizeof (float), in[c]);
       cl_err = clSetKernelArg (convert_kernel, c, sizeof (cl_mem), &buf[c]);
       if (cl_err)
         CL_Error ("Error setting kernel arg");
     }
-  size_t global_item_size = width * height;
-  size_t local_item_size = 64;
-  cl_err
-      = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, 0,
-                                &global_item_size, &local_item_size, 0, 0, 0);
+
+  size_t global_item_size[] = { size, 0, 0 };
+  cl_err = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, 0,
+                                   global_item_size, 0, 0, 0, 0);
   if (cl_err)
     CL_Error ("Error enqueueing range kernel");
+
   for (size_t c = 0; c < 3; ++c)
     {
-      cl_err = clEnqueueReadBuffer (cmd_queue, buf[c], CL_FALSE, 0, size,
-                                    out[c], 0, 0, 0);
+      cl_err = clEnqueueReadBuffer (cmd_queue, buf[c], CL_FALSE, 0,
+                                    size * sizeof (float), out[c], 0, 0, 0);
       if (cl_err)
         CL_Error ("Error enqueueing write buffer");
     }
-  cl_err = clFinish(cmd_queue);
+
+  cl_err = clFinish (cmd_queue);
   if (cl_err)
-    CL_Error("Error finishing convert command queue");
+    CL_Error ("Error finishing convert command queue");
 }
