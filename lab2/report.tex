@@ -42,7 +42,16 @@
 
 \section{Discussion}
 
-\subsection{A discussion of the measured results and how they differ from your predictions.}
+\subsection{A discussion of the measured results and how they differ
+  from your predictions.}
+We expected the kernel execution would be 50 times faster than the CPU
+version. The measured results show that the actual speedup is around
+14 times. The overhead might come from calling OpenCL api calls.
+
+We expected the data movement would be the major bottleneck. The
+measured results show that it is indeed the case. The data movement
+time is even longer than we expected. Around 300 ms is spent on
+data movement while only 7 ms was spent on the kernel execution.
 
 \subsection{A discussion of what you learned about these optimizations from implementing them and measuring the results.}
 
@@ -54,3 +63,8 @@
 Any feedback on the lab itself.
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
