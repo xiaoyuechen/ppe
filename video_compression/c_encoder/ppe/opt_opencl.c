@@ -261,7 +261,7 @@ initCL (int pwidth, int pheight, FILE *fd)
 }
 
 void
-convertCL (int size, float *in[3], float *out[3])
+convertCL (int size, float *in[3], float *out[3], size_t num_thd)
 {
   struct timeval start, stop;
   gettimeofday (&start, 0);
@@ -279,13 +279,17 @@ convertCL (int size, float *in[3], float *out[3])
            GetTimevalMicroSeconds (&start, &stop));
 
   gettimeofday (&start, 0);
-  size_t global_item_size[] = { size, 0, 0 };
-  cl_err = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, 0,
-                                   global_item_size, 0, 0, 0, 0);
-  if (cl_err)
-    CL_Error ("Error enqueueing range kernel");
+  size_t global_item_size = num_thd;
+  for (size_t offset = 0; offset < width * height; offset += num_thd)
+    {
+      cl_err = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, &offset,
+                                       &global_item_size, 0, 0, 0, 0);
+      if (cl_err)
+        CL_Error ("Error enqueueing range kernel");
 
-  clFinish (cmd_queue);
+      clFinish (cmd_queue);
+    }
+
   gettimeofday (&stop, 0);
   fprintf (output_file, "CL kernel execution time: %u\n",
            GetTimevalMicroSeconds (&start, &stop));

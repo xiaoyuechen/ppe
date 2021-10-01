@@ -101,7 +101,12 @@ convertRGBtoYCbCr (Image *in, Image *out)
   if (args.optimization_mode & OpenMP)
     convertOMP (size, in_array, out_array);
   else if (args.optimization_mode & OpenCL)
-    convertCL (size, in_array, out_array);
+    {
+      if (!args.opencl_num_threads)
+        convertCL (size, in_array, out_array, size);
+      else
+        convertCL (size, in_array, out_array, args.opencl_num_threads);
+    }
 }
 
 Channel *

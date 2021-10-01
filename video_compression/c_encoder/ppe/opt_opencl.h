@@ -10,7 +10,7 @@ extern "C"
 #endif
 
   void initCL (int width, int height, FILE* file);
-  void convertCL(int size, float* in[3], float* out[3]);
+  void convertCL(int size, float* in[3], float* out[3], size_t num_thd);
 
 #ifdef __cplusplus
 }
