@@ -54,13 +54,16 @@ time is even longer than we expected. Around 300 ms is spent on
 data movement while only 7 ms was spent on the kernel execution.
 
 \subsection{A discussion of what you learned about these optimizations from implementing them and measuring the results.}
+We learned that copying the data to and from the GPU took more time than running the code without a GPU. We also learned that it is hard to debug GPU kernel code since the kernel code is compiled at runtime.
 
 \subsection{Comment on any unexpected or odd results.}
+Copying data between the CPU and GPU took 300ms total. 200 of these ms were spent copying data from the GPU, meaning that it was half as fast to copy data back from the GPU. 
+
 
 \subsection{Comments on the difficulty of the GPU offload.}
+We used the in-class example, and this worked well except for the lack of informative compiler messages about errors in the kernel code.
 
 \section{Lab comments}
-Any feedback on the lab itself.
 
 \end{document}
 
