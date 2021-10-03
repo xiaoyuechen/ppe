@@ -261,11 +261,14 @@ initCL (int pwidth, int pheight, FILE *fd)
 }
 
 void
-convertCL (int size, float *in[3], float *out[3], size_t num_thd)
+convertCL (size_t size, const float *R, const float *G, const float *B,
+           float *Y, float *Cb, float *Cr, size_t num_thd)
 {
   struct timeval start, stop;
   gettimeofday (&start, 0);
 
+  const float *in[3] = { R, G, B };
+  float *out[3] = { Y, Cb, Cr };
   for (size_t c = 0; c < 3; ++c)
     {
       EnqueueWriteBuffer (cmd_queue, buf[c], size * sizeof (float), in[c]);

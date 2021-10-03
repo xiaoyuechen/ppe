@@ -14,6 +14,7 @@ static const struct argp_option argp_options[]
         { "cl_num_thd", OPT_CL_NUM_THD, "NUM", 0,
           "Use NUM threads for OpenCL" },
         { "omp", 'm', 0, 0, "Use OpenMP optimisation" },
+	{ "acc", 'a', 0, 0, "Use OpenACC optimisation" },
         { 0 } };
 
 static error_t
@@ -31,6 +32,9 @@ ParseOpt (int key, char *arg, struct argp_state *state)
       break;
     case 'm':
       args->optimization_mode |= OpenMP;
+      break;
+    case 'a':
+      args->optimization_mode |= OpenACC;
       break;
     default:
       return ARGP_ERR_UNKNOWN;

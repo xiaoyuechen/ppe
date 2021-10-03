@@ -14,6 +14,7 @@ extern "C"
     SIMD = 1 << 1,
     OpenMP = 1 << 2,
     OpenCL = 1 << 3,
+    OpenACC = 1 << 4
   };
 
   typedef struct Args

@@ -2,6 +2,7 @@
 #include "config.h"
 #include "custom_types.h"
 #include "dct8x8_block.h"
+#include "opt_openacc.h"
 #include "opt_opencl.h"
 #include "xml_aux.h"
 #include <iostream>
@@ -72,23 +73,24 @@ loadImage (int number, string path, Image **photo)
 }
 
 void
-convertOMP (size_t size, float *in[3], float *out[3])
+convertOMP (size_t size, const float *R, const float *G, const float *B,
+            float *Y, float *Cb, float *Cr)
 {
 #pragma omp parallel for
   for (int i = 0; i < size; ++i)
     {
-      float R = in[0][i];
-      float G = in[1][i];
-      float B = in[2][i];
-      float Y
-          = 0 + ((float)0.299 * R) + ((float)0.587 * G) + ((float)0.113 * B);
-      float Cb = 128 - ((float)0.168736 * R) - ((float)0.331264 * G)
-                 + ((float)0.5 * B);
-      float Cr = 128 + ((float)0.5 * R) - ((float)0.418688 * G)
-                 - ((float)0.081312 * B);
-      out[0][i] = Y;
-      out[1][i] = Cb;
-      out[2][i] = Cr;
+      float r = R[i];
+      float g = G[i];
+      float b = B[i];
+      float y
+          = 0 + ((float)0.299 * r) + ((float)0.587 * g) + ((float)0.113 * b);
+      float cb = 128 - ((float)0.168736 * r) - ((float)0.331264 * g)
+                 + ((float)0.5 * b);
+      float cr = 128 + ((float)0.5 * r) - ((float)0.418688 * g)
+                 - ((float)0.081312 * b);
+      Y[i] = y;
+      Cb[i] = cb;
+      Cr[i] = cr;
     }
 }
 
@@ -96,16 +98,27 @@ void
 convertRGBtoYCbCr (Image *in, Image *out)
 {
   int size = in->width * in->height;
-  float *in_array[3] = { in->rc->data, in->gc->data, in->bc->data };
-  float *out_array[3] = { out->rc->data, out->gc->data, out->bc->data };
-  if (args.optimization_mode & OpenMP)
-    convertOMP (size, in_array, out_array);
-  else if (args.optimization_mode & OpenCL)
+  const float *R = in->rc->data;
+  const float *G = in->gc->data;
+  const float *B = in->bc->data;
+  float *Y = out->rc->data;
+  float *Cb = out->gc->data;
+  float *Cr = out->bc->data;
+
+  if (args.optimization_mode & OpenCL)
     {
       if (!args.opencl_num_threads)
-        convertCL (size, in_array, out_array, size);
+        convertCL (size, R, G, B, Y, Cb, Cr, size);
       else
-        convertCL (size, in_array, out_array, args.opencl_num_threads);
+        convertCL (size, R, G, B, Y, Cb, Cr, args.opencl_num_threads);
+    }
+  else if (args.optimization_mode & OpenACC)
+    {
+      convertACC (size, R, G, B, Y, Cb, Cr);
+    }
+  else
+    {
+      convertOMP (size, R, G, B, Y, Cb, Cr);
     }
 }
 

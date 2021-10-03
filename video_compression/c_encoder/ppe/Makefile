@@ -20,13 +20,15 @@ SHELL = /bin/sh
 
 EXEC = cencoder
 
+ARGS =
+
 PERF_STAT_RECORD_FILE = perf-stat.data
 PERF_RECORD_EVENTS = task-clock,cycles,instructions,cache-misses,branch-misses
 PERF_RECORD_FILE = perf-record.data
 PERF_CALL_GRAPH_FILE = $(EXEC)-callgraph.png
 
 CXX_SRCS = custom_types.cpp dct8x8_block.cpp main.cpp xml_aux.cpp
-C_SRCS = cmd_args.c opt_opencl.c
+C_SRCS = cmd_args.c opt_opencl.c opt_openacc.c
 OBJS = $(CXX_SRCS:.cpp=.o) $(C_SRCS:.c=.o)
 
 DEBUG_FLAGS = -g
@@ -34,8 +36,8 @@ DEBUG_FLAGS = -g
 CC = gcc
 CXX = g++
 
-CPPFLAGS = $(DEBUG_FLAGS) -I /usr/include/libxml2/ -fopenmp \
-	-msse4.1 -mavx2 -O0
+CPPFLAGS = $(DEBUG_FLAGS) -O0 -I /usr/include/libxml2/ -fopenmp \
+	-msse4.1 -mavx2 -fopenacc
 CFLAGS = -std=c99
 CXXFLAGS = -std=c++17
 LDFLAGS = $(PERF_FLAGS)
@@ -52,7 +54,9 @@ dct8x8_block.o: dct8x8_block.h
 xml_aux.o: xml_aux.h config.h
 cmd_args.o: cmd_args.h
 opt_opencl.o: opt_opencl.h kernel.cl
-main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h opt_opencl.h
+opt_openacc.o: opt_openacc.h
+main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h \
+	opt_opencl.h opt_openacc.h
 
 .PHONY: clean
 clean:
@@ -60,10 +64,10 @@ clean:
 
 .PHONY: run
 run:
-	./$(EXEC)
+	./$(EXEC) $(ARGS)
 
 .PHONY: test
-test:
+test: run
 	matlab -sd ../../ml_encoder -batch compare_encoders
 
 .PHONY: perf-stat-record
