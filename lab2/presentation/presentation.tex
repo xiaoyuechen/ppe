@@ -1,0 +1,42 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{beaver}
+\AtBeginSection[]
+{
+\begin{frame}<beamer>
+\frametitle{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+}
+
+\usepackage{listings}
+
+\lstset{language=C}
+
+\title{PPE Lab 2 Presentation}
+\subtitle{\(100^{+}\)~lines vs \(1\)~line}
+
+\author{Xiaoyue Chen \and Hannah Atmer}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents[pausesections]
+\end{frame}
+
+\include{motivation}
+\include{methods}
+\include{results}
+\include{discussion}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

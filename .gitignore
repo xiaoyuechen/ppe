@@ -8,6 +8,12 @@ video_compression/c_encoder/ppe/cencoder
 video_compression/outputs
 *.log
 report.pdf
+presentation.pdf
 *.synctex.gz
 *.aux
 auto
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
