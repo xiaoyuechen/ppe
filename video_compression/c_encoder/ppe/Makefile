@@ -72,7 +72,7 @@ test: run
 
 .PHONY: perf-stat-record
 perf-stat-record:
-	perf stat record -o $(PERF_STAT_RECORD_FILE) ./$(EXEC)
+	perf stat record -o $(PERF_STAT_RECORD_FILE) ./$(EXEC) $(ARGS)
 
 .PHONY: perf-stat-report
 perf-stat-report:
@@ -80,11 +80,12 @@ perf-stat-report:
 
 .PHONY: perf-record
 perf-record:
-	perf record -e $(PERF_RECORD_EVENTS) -g -o $(PERF_RECORD_FILE) ./$(EXEC)
+	perf record -e $(PERF_RECORD_EVENTS) -g -o \
+	$(PERF_RECORD_FILE) ./$(EXEC) $(ARGS)
 
 .PHONY: perf-report
 perf-report:
-	perf report --no-children -i $(PERF_RECORD_FILE)
+	perf report -i $(PERF_RECORD_FILE)
 
 .PHONY: perf-call-graph
 perf-call-graph:

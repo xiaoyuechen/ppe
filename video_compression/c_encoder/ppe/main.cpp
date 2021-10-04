@@ -82,12 +82,9 @@ convertOMP (size_t size, const float *R, const float *G, const float *B,
       float r = R[i];
       float g = G[i];
       float b = B[i];
-      float y
-          = 0 + ((float)0.299 * r) + ((float)0.587 * g) + ((float)0.113 * b);
-      float cb = 128 - ((float)0.168736 * r) - ((float)0.331264 * g)
-                 + ((float)0.5 * b);
-      float cr = 128 + ((float)0.5 * r) - ((float)0.418688 * g)
-                 - ((float)0.081312 * b);
+      float y = 0 + (0.299f * r) + (0.587f * g) + (0.113f * b);
+      float cb = 128 - (0.168736f * r) - (0.331264f * g) + (0.5f * b);
+      float cr = 128 + (0.5f * r) - (0.418688f * g) - (0.081312f * b);
       Y[i] = y;
       Cb[i] = cb;
       Cr[i] = cr;
