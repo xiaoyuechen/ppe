@@ -1,4 +1,87 @@
 \section{Results}
+\begin{frame}[fragile]
+  \frametitle{Hardware}
+  \begin{block}{\texttt{lscpu}}
+\begin{verbatim}
+Architecture              x86_64
+CPU(s)                    12
+Model name                Intel(R) Core(TM) i7-8750H CPU
+Thread(s) per core        2
+Core(s) per socket        6
+CPU max MHz               4100.0000
+\end{verbatim}
+  \end{block}
+  \pause{}
+  \begin{block}{\texttt{clinfo; nvidia-settings -q CUDACores -t}}
+\begin{verbatim}
+Device Name               NVIDIA GeForce GTX 1060
+PCIe Version              3.0.0
+Max compute units         10
+Max clock frequency       1733MHz
+Max work item sizes       1024x1024x64
+Cuda cores                1280
+\end{verbatim}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Predictions vs reality}
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{lll}
+      \toprule
+      Part & Predicted & Reality \\
+      \midrule
+      Init & small slowdown & \uncover<2->{\(95.5~\mathit{ms}\)} \\
+      Data & large slowdown & \uncover<2->{\(210.2_{\mathsf{H2D}}~\mathit{ms} + 97.9_{\mathsf{D2H}}~\mathit{ms} \approx 300~\mathit{ms}\)} \\
+      Kernel & 50x speedup &  \uncover<2->{\(100_{base}~\mathit{ms}/7_{gpu}~\mathit{ms} \approx 14\)x speedup} \\
+      Total & 0.8x speedup &  \uncover<2->{\(100_{base}~\mathit{ms}/300_{gpu}~\mathit{ms} \approx 0.3\)x speedup} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \uncover<3->{
+    \begin{alertblock}{Note}
+      \begin{itemize}
+      \item Data movements are \_really\_ slow
+      \item Should expect kernel execution
+        \(\frac{1733_{\mathit{MHz}} \times 1280_{cores} \times
+          1_{flop}}{4100_{\mathit{MHz}} \times 6_{cores} \times 8_{flop}} \approx
+        11\)x speedup
+      \item Device to host data movement is slower than host to device
+        data movement
+      \end{itemize}
+    \end{alertblock}
+  }
+\end{frame}
+
+\begin{frame}
+  \frametitle{Kernel performance parallel scaling}
+  \begin{table}[h]
+    \begin{tabular}{rcccc}
+      \toprule
+      Cores & 16 & 32 & 64 & 128 \\
+      \midrule
+      Time (ms) & 39700 & 9700 & 4700 & 2700 \\
+      Speedup & 0.0002 & 0.0008 & 0.0016 & 0.0027 \\
+      \bottomrule
+      \toprule
+      Cores & 256 & 512 & 1024 & \(1024 \times 1024\)\\
+      \midrule
+      Time (ms) & 700 & 500 & 200 & 7 \\
+      Speedup & 0.0106 & 0.0148 & 0.0370 & 1.0 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \pause
+  \begin{alertblock}{Note}
+    \begin{itemize}
+    \item Scales as expected between 32~cores and 64~cores
+    \item We only have 1280 physical cores, how can
+      \(1024 \times 1024\) achieve a 28x speedup comparing to 1024 cores?
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
 
 %%% Local Variables:
 %%% mode: latex

@@ -1,5 +1,6 @@
 \documentclass{beamer}
 
+% \setbeameroption{show notes on second screen=right}
 \usetheme{Madrid}
 \usecolortheme{beaver}
 \AtBeginSection[]
@@ -10,9 +11,10 @@
 \end{frame}
 }
 
+\usepackage[hidenotes]{pdfpc}
 \usepackage{listings}
-
 \lstset{language=C}
+\usepackage{booktabs}
 
 \title{PPE Lab 2 Presentation}
 \subtitle{\(100^{+}\)~lines vs \(1\)~line}
@@ -21,12 +23,12 @@
 
 \begin{document}
 \begin{frame}
-  \titlepage{}
+  \titlepage
 \end{frame}
 
 \begin{frame}
   \frametitle{Outline}
-  \tableofcontents[pausesections]
+  \tableofcontents
 \end{frame}
 
 \include{motivation}

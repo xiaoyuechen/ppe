@@ -1,4 +1,58 @@
 \section{Discussion}
+\begin{frame}
+  \frametitle{Why OpenCL}
+  \begin{block}{Benefits}
+    \begin{itemize}
+    \item Low-level
+    \item Heterogeneous
+    \item Standard
+    \item Widely supported
+    \item Stable
+    \item \ldots
+    \end{itemize}
+  \end{block}
+  \pause{}
+  \begin{alertblock}{BUT}
+    So \_many\_ lines of code just to run a simple kernel!
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The one-liner}
+  \pause{}
+  %
+  \lstinputlisting[basicstyle=\tiny, firstline=7,
+  lastline=19]{src/opt_openacc.c} \pause{}
+  \begin{alertblock}{\#pragma acc parallel loop}
+    \begin{itemize}
+    \item Initialisation
+    \item Memory allocation/release
+    \item Data movements
+    \item Kernel execution
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{OpenACC}
+  \begin{block}{Benefits}
+    \begin{itemize}
+    \item High-level
+    \item Heterogeneous
+    \item Standard
+    \item Similar to OpenMP and will become a subset of it
+    \item Compiling to accelerators' assembly
+    \end{itemize}
+  \end{block}
+  \begin{block}{Problems}
+    \begin{itemize}
+    \item Less control
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{Opinion}
+    OpenACC is very suitable for applications like \texttt{c\_encoder}
+  \end{alertblock}
+\end{frame}
 
 %%% Local Variables:
 %%% mode: latex

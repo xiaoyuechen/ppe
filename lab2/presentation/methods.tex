@@ -1,4 +1,58 @@
 \section{Methods}
+\begin{frame}
+  \frametitle{Device memory}
+  \lstinputlisting[basicstyle=\tiny, firstline=174,
+  lastline=181]{src/opt_opencl.c} \pause{}
+  \begin{block}{In initCL}
+    \lstinputlisting[basicstyle=\tiny, firstline=259,
+    lastline=263]{src/opt_opencl.c}
+  \end{block}
+  \pause{}
+  \begin{alertblock}{Allocation}
+    \begin{itemize}
+    \item A read+write buffer for each channel
+    \item Allocation only in initCL, reused in each frame
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Data movement}
+  \pause{}
+  \begin{block}{Write to each channel \lstinline{c}}
+    \lstinputlisting[basicstyle=\tiny, firstline=282,
+    lastline=282]{src/opt_opencl.c}
+  \end{block}
+  \pause{}
+  \begin{block}{Read from each channel \lstinline{c}}
+    \lstinputlisting[basicstyle=\tiny, firstline=314,
+    lastline=314]{src/opt_opencl.c}
+  \end{block}
+  \pause{}
+  \begin{alertblock}{Data movement}
+    \begin{itemize}
+    \item Write/read once for each channel in each frame
+    \item Write/read
+      \(1024 \times 1024 \times 3 \times 4~\mathit{B} = 12~\mathit{MB}\) every frame
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Kernel execution}
+  \begin{block}{The \lstinline{convert} kernel}
+    \lstinputlisting[basicstyle=\tiny]{src/kernel.cl}
+  \end{block}
+  \pause{}
+  \begin{alertblock}{Properties}
+    \begin{itemize}
+    \item Extremely simple
+    \item 1D
+    \item Load/store at the same memory location
+    \item No synchronisation
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
 
 %%% Local Variables:
 %%% mode: latex

@@ -2,7 +2,7 @@
 \begin{frame}[fragile]
   \frametitle{The CPU version of \lstinline{convertRGBtoYCbCr}}
   \lstinputlisting[firstline=75, lastline=92,
-  basicstyle=\tiny]{src/main.cpp} \pause
+  basicstyle=\tiny]{src/main.cpp} \pause{}
   \begin{alertblock}{Properties of the function}
     \begin{itemize}
     \item Optimisations: reducing computation, cache, SIMD
@@ -14,14 +14,7 @@
 
 \begin{frame}
   \frametitle{Why offloading \lstinline{convertRGBtoYCbCr}}
-  \begin{block}{Benefits}
-    \begin{itemize}
-    \item Lab requirement
-    \item Trivial parallelisation
-    \item Very fast kernel execution
-    \end{itemize}
-  \end{block}
-  \pause
+  \pause{}
   \begin{block}{Problems}
     \begin{itemize}
     \item Low computational intensity
@@ -30,7 +23,15 @@
     \item A \_lot\_ of additional code
     \end{itemize}
   \end{block}
-  \pause
+  \pause{}
+  \begin{block}{Benefits}
+    \begin{itemize}
+    \item Lab requirement
+    \item Trivial parallelisation
+    \item Very fast kernel execution
+    \end{itemize}
+  \end{block}
+  \pause{}
   \begin{alertblock}{Big potential}
     Data movement overhead could be shared with other GPU computations
   \end{alertblock}

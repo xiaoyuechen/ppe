@@ -213,6 +213,14 @@ EnqueueWriteBuffer (cl_command_queue cmdq, cl_mem buff, size_t size,
     CL_Error ("Error enqueueing write buffer");
 }
 
+void
+EnqueueReadBuffer (cl_command_queue cmdq, cl_mem buff, size_t size, void *data)
+{
+  cl_err = clEnqueueReadBuffer (cmdq, buff, CL_FALSE, 0, size, data, 0, 0, 0);
+  if (cl_err)
+    CL_Error ("Error enqueueing read buffer");
+}
+
 uint32_t
 GetTimevalMicroSeconds (const struct timeval *start,
                         const struct timeval *stop)
@@ -269,9 +277,12 @@ convertCL (size_t size, const float *R, const float *G, const float *B,
 
   const float *in[3] = { R, G, B };
   float *out[3] = { Y, Cb, Cr };
+
+  for (size_t c = 0; c < 3; ++c)
+    EnqueueWriteBuffer (cmd_queue, buf[c], size * sizeof (float), in[c]);
+
   for (size_t c = 0; c < 3; ++c)
     {
-      EnqueueWriteBuffer (cmd_queue, buf[c], size * sizeof (float), in[c]);
       cl_err = clSetKernelArg (convert_kernel, c, sizeof (cl_mem), &buf[c]);
       if (cl_err)
         CL_Error ("Error setting kernel arg");
@@ -283,7 +294,7 @@ convertCL (size_t size, const float *R, const float *G, const float *B,
 
   gettimeofday (&start, 0);
   size_t global_item_size = num_thd;
-  for (size_t offset = 0; offset < width * height; offset += num_thd)
+  for (size_t offset = 0; offset < size; offset += num_thd)
     {
       cl_err = clEnqueueNDRangeKernel (cmd_queue, convert_kernel, 1, &offset,
                                        &global_item_size, 0, 0, 0, 0);
@@ -300,10 +311,7 @@ convertCL (size_t size, const float *R, const float *G, const float *B,
   gettimeofday (&start, 0);
   for (size_t c = 0; c < 3; ++c)
     {
-      cl_err = clEnqueueReadBuffer (cmd_queue, buf[c], CL_FALSE, 0,
-                                    size * sizeof (float), out[c], 0, 0, 0);
-      if (cl_err)
-        CL_Error ("Error enqueueing write buffer");
+      EnqueueReadBuffer (cmd_queue, buf[c], size * sizeof (float), out[c]);
     }
 
   cl_err = clFinish (cmd_queue);
