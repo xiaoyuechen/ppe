@@ -20,7 +20,6 @@
     \item Low computational intensity
     \item Data movement overhead
     \item Not worth optimising currently (\(0.7\%\) of total runtime)
-    \item A \_lot\_ of additional code
     \end{itemize}
   \end{block}
   \pause{}
@@ -33,7 +32,10 @@
   \end{block}
   \pause{}
   \begin{alertblock}{Big potential}
-    Data movement overhead could be shared with other GPU computations
+    \begin{itemize}
+    \item Data movement overhead could be shared
+    \item Less data to move! 8-bit image vs 32-bit image
+    \end{itemize}
   \end{alertblock}
 \end{frame}
 
