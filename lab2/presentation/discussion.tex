@@ -35,22 +35,37 @@
 
 \begin{frame}
   \frametitle{OpenACC}
-  \begin{block}{Benefits}
-    \begin{itemize}
-    \item High-level
-    \item Heterogeneous
-    \item Standard
-    \item Similar to OpenMP and will become a subset of it
-    \item Compiling to accelerators' assembly
-    \end{itemize}
-  \end{block}
-  \begin{block}{Problems}
-    \begin{itemize}
-    \item Less control
-    \end{itemize}
-  \end{block}
+  \begin{columns}
+    \begin{column}{0.47\linewidth}
+      \begin{block}{Benefits}
+        \begin{itemize}
+        \item High-level
+        \item Heterogeneous
+        \item Similar to OpenMP and will become its subset
+        \item Can be used with OpenCL
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \pause{}
+    \begin{column}{0.47\linewidth}
+      \begin{block}{Problems}
+        \begin{itemize}
+        \item Less control
+        \end{itemize}
+      \end{block}
+      \pause{}
+      \begin{exampleblock}{OpenCL vs OpenAcc}
+        \begin{itemize}
+        \item \lstinline{convertCL}: 300~\textit{ms}
+        \item \lstinline{convertACC}: 400~\textit{ms}
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+  \pause{}
   \begin{alertblock}{Opinion}
-    OpenACC is very suitable for applications like \texttt{c\_encoder}
+    OpenACC is very suitable for optimising programs like
+    \texttt{c\_encoder}
   \end{alertblock}
 \end{frame}
 
