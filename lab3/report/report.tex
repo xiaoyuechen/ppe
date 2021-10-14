@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{booktabs}
 
 \title{Lab 3}
 \author{Hannah Atmer and Xiaoyue Chen \\ Team 6}
@@ -12,33 +13,26 @@
 \maketitle
 
 \section{Performance Estimates}
-
-\begin{figure}[h!t]
+  \begin{table}[h]
     \centering
-    \includegraphics[width=1\textwidth]{predicted.png}
-    \caption{Predicted Performance Impact}
-    \label{fig:predicted}
-\end{figure}
+    \begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.4\textwidth}}
+      \toprule
+      Operation & Predicted performance & Why \\
+      \midrule
+      8-bit unsigned add & & \\
+      floating point add & & \\
+      Sequentially load a 32-bit int from an array & & \\
+      Randomly load a 32 bit int from an array & & \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
 
 \section{Performance Achieved}
 
 \subsection{Your measured performance results from implementing the optimizations.}
 
-\begin{figure}[h!t]
-    \centering
-    \includegraphics[width=1\textwidth]{actual.png}
-    \caption{Actual Performance Impact}
-    \label{fig:actual}
-\end{figure}
-
 \subsection{The parallel scaling of your implementation.}
-
-\begin{figure}[h!t]
-    \centering
-    \includegraphics[width=1\textwidth]{parallel.png}
-    \caption{Parallel Scaling}
-    \label{fig:parallel}
-\end{figure}
 
 \section{Discussion}
 
@@ -57,7 +51,7 @@ data movement while only 7 ms was spent on the kernel execution.
 We learned that copying the data to and from the GPU took more time than running the code without a GPU. We also learned that it is hard to debug GPU kernel code since the kernel code is compiled at runtime.
 
 \subsection{Comment on any unexpected or odd results.}
-Copying data between the CPU and GPU took 300ms total. 200 of these ms were spent copying data from the GPU, meaning that it was half as fast to copy data back from the GPU. 
+Copying data between the CPU and GPU took 300ms total. 200 of these ms were spent copying data from the GPU, meaning that it was half as fast to copy data back from the GPU.
 
 
 \subsection{Comments on the difficulty of the GPU offload.}
