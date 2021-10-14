@@ -19,14 +19,31 @@
       \toprule
       Operation & Predicted performance & Why \\
       \midrule
-      8-bit unsigned add & & \\
-      floating point add & & \\
-      Sequentially load a 32-bit int from an array & & \\
-      Randomly load a 32 bit int from an array & & \\
+      8-bit unsigned add & 787 GOPS & \(6 \times 4.1\times10^{9} \times 32 \times 1\) \\
+      floating point add & 196 GFLOPS & \(6 \times 4.1\times10^{9} \times 8 \times 1\) \\
+      Sequentially load a 32-bit int from an array & 3.6 GOPS & \(14.4 / 4\) \\
+      Randomly load a 32 bit int from an array & 0.2 GOPS & \(14.4 / 16 / 4\) \\
       \bottomrule
     \end{tabular}
+    \caption{Performance estimation for CPU}
   \end{table}
 
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.4\textwidth}}
+      \toprule
+      Operation & Predicted performance & Why \\
+      \midrule
+      8-bit unsigned add & 1734 GOPS & \(1280 \times 1.7 \times 1\) \\
+      floating point add & 1734 GFLOPS & \(1280 \times 1.7 \times 1\) \\
+      Sequentially load a 32-bit int from an array & 48 GOPS & \(192 / 4\) \\
+      Randomly load a 32 bit int from an array & 1.5 GOPS & \(192 / 32
+                                                            / 4\) \\
+      Data transfer from CPU to GPU & 1.5 GB/s & measured \\
+      \bottomrule
+    \end{tabular}
+    \caption{Performance estimation for GPU}
+  \end{table}
 
 \section{Performance Achieved}
 

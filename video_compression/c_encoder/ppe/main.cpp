@@ -5,6 +5,7 @@
 #include "opt_openacc.h"
 #include "opt_opencl.h"
 #include "xml_aux.h"
+#include <cstdio>
 #include <iostream>
 #include <math.h>
 #include <omp.h>
@@ -577,6 +578,8 @@ encode ()
   int width = frame_rgb->width;
   int height = frame_rgb->height;
   int npixels = width * height;
+
+  printf("Image width=%d height=%d\n", width, height);
 
   if (args.optimization_mode & OpenCL)
     {
