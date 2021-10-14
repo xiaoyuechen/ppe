@@ -13,6 +13,8 @@
 \maketitle
 
 \section{Performance Estimates}
+\subsection{Your estimates of the peak CPU and GPU performance and how you came up with them. }
+
   \begin{table}[h]
     \centering
     \begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.4\textwidth}}
@@ -45,37 +47,58 @@
     \caption{Performance estimation for GPU}
   \end{table}
 
+
+
+
+
+% Answers about add benchmark
+\subsection{Why were all benchmark runs not the same speed in 1 and 2?}
+
+\subsection{What was the problem with 1 and 2 that we fixed in 3?}
+
+\subsection{What optimization did the compiler do for 1 that prevented us from measuring what we wanted?}
+
+\subsection{What did the code change in 2 do to prevent the compiler from doing this optimization?}
+
+\subsection{What optimization did the compiler do for 3 that prevented us from measuring what we wanted?}
+
+\subsection{Why was the performance of 4 so much slower than 2?}
+
+\subsection{What was the optimization in 6 and why does it improve performance?}
+
+
+% Results 
 \section{Performance Achieved}
 
-\subsection{Your measured performance results from implementing the optimizations.}
+\subsection{Your measured performance results}
 
-\subsection{The parallel scaling of your implementation.}
 
+
+\subsection{Graph of results}
+
+
+% Discussion
 \section{Discussion}
 
 \subsection{A discussion of the measured results and how they differ
   from your predictions.}
-We expected the kernel execution would be 50 times faster than the CPU
-version. The measured results show that the actual speedup is around
-14 times. The overhead might come from calling OpenCL api calls.
 
-We expected the data movement would be the major bottleneck. The
-measured results show that it is indeed the case. The data movement
-time is even longer than we expected. Around 300 ms is spent on
-data movement while only 7 ms was spent on the kernel execution.
 
-\subsection{A discussion of what you learned about these optimizations from implementing them and measuring the results.}
-We learned that copying the data to and from the GPU took more time than running the code without a GPU. We also learned that it is hard to debug GPU kernel code since the kernel code is compiled at runtime.
+\subsection{A discussion of what you learned about the hardware from measuring its performance.}
+
+\subsection{A discussion of how you wrote your benchmarks and any issues you encountered and how you solved them.}
+
+
+
+\subsection{Discuss how confident you are that your microbenchmarks accurately reflect the best obtainable performance.}
 
 \subsection{Comment on any unexpected or odd results.}
-Copying data between the CPU and GPU took 300ms total. 200 of these ms were spent copying data from the GPU, meaning that it was half as fast to copy data back from the GPU.
 
+\subsection{Comments on how this compares to your results from Labs 1 and 2 for the color conversion.}
 
-\subsection{Comments on the difficulty of the GPU offload.}
-We used the in-class example, and this worked well except for the lack of informative compiler messages about errors in the kernel code.
 
 \section{Lab comments}
-We ended up doing a lot of code improvements aside from optimizations. Perhaps our improved code can be used in later years.
+
 
 \end{document}
 
