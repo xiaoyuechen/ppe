@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{listings}
+
+\title{Lab 3}
+\author{Hannah Atmer and Xiaoyue Chen \\ Team 6}
+\date{October 2021}
+
+\begin{document}
+
+\maketitle
+
+\section{Performance Estimates}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{predicted.png}
+    \caption{Predicted Performance Impact}
+    \label{fig:predicted}
+\end{figure}
+
+\section{Performance Achieved}
+
+\subsection{Your measured performance results from implementing the optimizations.}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{actual.png}
+    \caption{Actual Performance Impact}
+    \label{fig:actual}
+\end{figure}
+
+\subsection{The parallel scaling of your implementation.}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{parallel.png}
+    \caption{Parallel Scaling}
+    \label{fig:parallel}
+\end{figure}
+
+\section{Discussion}
+
+\subsection{A discussion of the measured results and how they differ
+  from your predictions.}
+We expected the kernel execution would be 50 times faster than the CPU
+version. The measured results show that the actual speedup is around
+14 times. The overhead might come from calling OpenCL api calls.
+
+We expected the data movement would be the major bottleneck. The
+measured results show that it is indeed the case. The data movement
+time is even longer than we expected. Around 300 ms is spent on
+data movement while only 7 ms was spent on the kernel execution.
+
+\subsection{A discussion of what you learned about these optimizations from implementing them and measuring the results.}
+We learned that copying the data to and from the GPU took more time than running the code without a GPU. We also learned that it is hard to debug GPU kernel code since the kernel code is compiled at runtime.
+
+\subsection{Comment on any unexpected or odd results.}
+Copying data between the CPU and GPU took 300ms total. 200 of these ms were spent copying data from the GPU, meaning that it was half as fast to copy data back from the GPU. 
+
+
+\subsection{Comments on the difficulty of the GPU offload.}
+We used the in-class example, and this worked well except for the lack of informative compiler messages about errors in the kernel code.
+
+\section{Lab comments}
+We ended up doing a lot of code improvements aside from optimizations. Perhaps our improved code can be used in later years.
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
