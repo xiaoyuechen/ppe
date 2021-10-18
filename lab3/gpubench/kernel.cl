@@ -1,11 +1,32 @@
-#include <stddef.h>
+kernel void
+add_char (char scale)
+{
+  char sum = 1;
+  sum += scale;
+}
 
 kernel void
-add_char (size_t s, int scale, global char *out)
+add_float (float scale)
 {
-  /* size_t local_iter = iter / get_global_size (0); */
-  /* char sum = 1; */
-  /* for (size_t i = 0; i < local_iter; ++i) */
-  /*   sum += scale; */
-  /* out[get_global_id (0)] = sum; */
+  char sum = 1.0f;
+  sum += scale;
+}
+
+kernel void
+load_seq (int size, global int *array)
+{
+  int loaded;
+  for (int i = 0; i < size; ++i)
+    {
+      loaded = array[i];
+    }
+}
+
+kernel void
+load_rand (int size, global int *array)
+{
+  for (int next = 0; next < size;)
+    {
+      next = array[next];
+    }
 }

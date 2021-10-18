@@ -20,11 +20,11 @@
 
 #include <stddef.h>
 
-void init();
-void add_char(size_t size);
-void add_float(size_t size);
-void load_int_seq(size_t size);
-void load_int_rand(size_t size);
-void transfer_data(size_t size);
+void init ();
+void add_char (size_t size);
+void add_float (size_t size);
+void load_int_seq (size_t size);
+void load_int_rand (size_t size);
+void transfer_data (size_t size);
 
 #endif

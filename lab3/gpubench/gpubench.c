@@ -19,9 +19,16 @@
 
 #include "benchmark.h"
 
-int main(int argc, char* argv[argc + 1])
-{
-  init();
+#define SIZE 1 * 1000 * 1000 * 1000ULL
 
-  exit(EXIT_SUCCESS);
+int
+main (int argc, char *argv[argc + 1])
+{
+  init ();
+  add_char (SIZE);
+  add_float (SIZE);
+  load_int_seq (SIZE);
+  load_int_rand (SIZE);
+
+  exit (EXIT_SUCCESS);
 }

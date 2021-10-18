@@ -16,6 +16,7 @@
  */
 
 #include "benchmark.h"
+#include <sys/types.h>
 
 #define CL_TARGET_OPENCL_VERSION 300
 
@@ -121,87 +122,15 @@ GetCLErrorStr (cl_int err)
     }                                                                         \
   while (0)
 
-#define CL_CHECK_EA(x)                                                        \
-  do                                                                          \
+#define CL_CHECK_R(x)                                                         \
+  x;                                                                          \
+  if (cl_err)                                                                 \
     {                                                                         \
-      x;                                                                      \
-      if (cl_err)                                                             \
-        {                                                                     \
-          const char *err_str = GetCLErrorStr (cl_err);                       \
-          CL_PRINT_ERROR (cl_err, x);                                         \
-          exit (EXIT_FAILURE);                                                \
-        }                                                                     \
+      const char *err_str = GetCLErrorStr (cl_err);                           \
+      CL_PRINT_ERROR (cl_err, x);                                             \
+      exit (EXIT_FAILURE);                                                    \
     }                                                                         \
   while (0)
-
-void
-Error (const char *restrict format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
-  fprintf (stderr, "\n");
-  exit (EXIT_FAILURE);
-}
-
-cl_context
-CreateContext (cl_device_id *device_id)
-{
-  // Get platform and device information
-  cl_platform_id platform_id;
-  CL_CHECK (clGetPlatformIDs (1, &platform_id, 0));
-  CL_CHECK (clGetDeviceIDs (platform_id, CL_DEVICE_TYPE_GPU, 1, device_id, 0));
-
-  char device_name[0x100];
-  CL_CHECK (
-      clGetDeviceInfo (*device_id, CL_DEVICE_NAME, 0x100, device_name, 0));
-  printf ("Using GPU: %s\n", device_name);
-
-  // Create an OpenCL context
-  cl_context context = clCreateContext (0, 1, device_id, 0, 0, &cl_err);
-
-  return context;
-}
-
-cl_program
-CreateProgram (const char *file_name, cl_context context)
-{
-  const size_t MAX_SOURCE_SIZE = 0x100000;
-  FILE *fp = fopen (file_name, "r");
-  char *src = malloc (MAX_SOURCE_SIZE);
-  size_t size = fread (src, 1, MAX_SOURCE_SIZE, fp);
-  fclose (fp);
-
-  cl_program prg = clCreateProgramWithSource (context, 1, (const char **)&src,
-                                              &size, &cl_err);
-  free (src);
-
-  CL_CHECK (clBuildProgram (prg, 0, 0, 0, 0, 0));
-  return prg;
-}
-
-cl_kernel
-CreateKernel (cl_program prg, const char *kernel_name)
-{
-  cl_kernel kernel = clCreateKernel (prg, kernel_name, &cl_err);
-  return kernel;
-}
-
-cl_command_queue
-CreateCommandQueue (cl_context context, cl_device_id device)
-{
-  cl_command_queue command_queue
-      = clCreateCommandQueueWithProperties (context, device, 0, &cl_err);
-  return command_queue;
-}
-
-cl_mem
-CreateBuffer (cl_context context, size_t size)
-{
-  cl_mem mem = clCreateBuffer (context, CL_MEM_READ_WRITE, size, 0, &cl_err);
-  return mem;
-}
 
 uint32_t
 GetTimevalMicroSeconds (const struct timeval *start,
@@ -211,22 +140,174 @@ GetTimevalMicroSeconds (const struct timeval *start,
           - start->tv_usec);
 }
 
+static const char kernel_file[] = "kernel.cl";
+static const size_t MAX_SOURCE_SIZE = 0x100000;
+
+enum Kernel
+{
+  add_char_kernel,
+  add_float_kernel,
+  load_seq_kernel,
+  load_rand_kernel,
+  kernel_count
+};
+
+static const char *const kernel_names[kernel_count]
+    = { [add_char_kernel] = "add_char",
+        [add_float_kernel] = "add_float",
+        [load_seq_kernel] = "load_seq",
+        [load_rand_kernel] = "load_rand" };
+
 static cl_device_id device_id;
 static cl_context context;
 static cl_program program;
-static cl_kernel convert_kernel;
+static cl_kernel kernels[kernel_count];
 static cl_command_queue cmd_queue;
-static float *pinned_mem[3];
-static cl_mem pinned_buf[3];
-static cl_mem buf[3];
-static int width, height;
-static FILE *output_file;
 
 void
 init ()
 {
-  context = CreateContext (&device_id);
-  program = CreateProgram ("kernel.cl", context);
-  convert_kernel = CreateKernel (program, "add_char");
-  cmd_queue = CreateCommandQueue (context, device_id);
+  cl_platform_id platform_id;
+  CL_CHECK (clGetPlatformIDs (1, &platform_id, 0));
+  CL_CHECK (
+      clGetDeviceIDs (platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, 0));
+
+  char device_name[0x100];
+  CL_CHECK (
+      clGetDeviceInfo (device_id, CL_DEVICE_NAME, 0x100, device_name, 0));
+  printf ("Using GPU: %s\n", device_name);
+
+  context = CL_CHECK_R (clCreateContext (0, 1, &device_id, 0, 0, &cl_err));
+
+  /* TODO(Xiaoyue Chen): error handling file reading */
+  FILE *fp = fopen (kernel_file, "r");
+  char *src = malloc (MAX_SOURCE_SIZE);
+  size_t size = fread (src, 1, MAX_SOURCE_SIZE, fp);
+  fclose (fp);
+
+  program = CL_CHECK_R (clCreateProgramWithSource (
+      context, 1, (const char **)&src, &size, &cl_err));
+  free (src);
+
+  CL_CHECK (clBuildProgram (program, 0, 0, 0, 0, 0));
+
+  for (size_t i = 0; i < kernel_count; ++i)
+    {
+      kernels[i]
+          = CL_CHECK_R (clCreateKernel (program, kernel_names[i], &cl_err));
+    }
+
+  cmd_queue = CL_CHECK_R (
+      clCreateCommandQueueWithProperties (context, device_id, 0, &cl_err));
+}
+
+void
+add_char (size_t size)
+{
+  cl_kernel kernel = kernels[add_char_kernel];
+
+  char scale = 7;
+  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (char), &scale));
+  CL_CHECK (clFinish (cmd_queue));
+
+  struct timeval start, end;
+  gettimeofday (&start, 0);
+
+  CL_CHECK (
+      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+
+  gettimeofday (&end, 0);
+  printf ("%s %zu takes %u us\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end));
+}
+
+void
+add_float(size_t size)
+{
+  cl_kernel kernel = kernels[add_float_kernel];
+
+  float scale = 7.0f;
+  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (float), &scale));
+  CL_CHECK (clFinish (cmd_queue));
+
+  struct timeval start, end;
+  gettimeofday (&start, 0);
+
+  CL_CHECK (
+      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+
+  gettimeofday (&end, 0);
+  printf ("%s %zu takes %u us\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end));
+}
+
+void
+load_int_seq (size_t size)
+{
+  cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_READ_ONLY,
+                                           sizeof (int) * size, 0, &cl_err));
+
+  int size_int = size;
+  CL_CHECK (
+      clSetKernelArg (kernels[load_seq_kernel], 0, sizeof (int), &size_int));
+  CL_CHECK (
+      clSetKernelArg (kernels[load_seq_kernel], 1, sizeof (cl_mem), &buf));
+  CL_CHECK (clFinish (cmd_queue));
+
+  struct timeval start, end;
+  gettimeofday (&start, 0);
+
+  size_t one = 1;
+  CL_CHECK (clEnqueueNDRangeKernel (cmd_queue, kernels[load_seq_kernel], 1, 0,
+                                    &one, 0, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+
+  gettimeofday (&end, 0);
+  printf ("%s %zu takes %u us\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end));
+
+  clReleaseMemObject (buf);
+}
+
+void
+load_int_rand (size_t size)
+{
+  cl_kernel kernel = kernels[load_rand_kernel];
+
+  int *array = malloc (sizeof (int) * size);
+
+  for (int j = 0; j < size; j++)
+    {
+      int r = j + (rand () % (size - j));
+      int tmp = array[r];
+      array[r] = array[j];
+      array[j] = r;
+    }
+
+  cl_mem buf = CL_CHECK_R (
+      clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                      sizeof (int) * size, array, &cl_err));
+
+  int size_int = size;
+  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (int), &size_int));
+  CL_CHECK (clSetKernelArg (kernel, 1, sizeof (cl_mem), &buf));
+  CL_CHECK (clFinish (cmd_queue));
+
+  struct timeval start, end;
+
+  gettimeofday (&start, 0);
+
+  size_t one = 1;
+  CL_CHECK (
+      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &one, 0, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+
+  gettimeofday (&end, 0);
+  printf ("%s %zu takes %u us\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end));
+
+  clReleaseMemObject (buf);
+  free (array);
 }
