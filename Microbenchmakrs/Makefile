@@ -19,13 +19,12 @@
 SHELL = /bin/sh
 EXEC = microbenchmark
 
-CXX_SRCS = add_benchmark.cpp
-OBJS = $(CXX_SRCS:.cpp=.o) $(C_SRCS:.c=.o)
+SRCS = add_benchmark.c
+OBJS = $(SRCS:.c=.o)
 
 DEBUG_FLAGS = -g
-CPPFLAGS = $(DEBUG_FLAGS) -O0 -I /usr/include/libxml2/ -fopenmp \
-	-msse4.1 -mavx2 -fopenacc
-CFLAGS = -std=c99
+CPPFLAGS = $(DEBUG_FLAGS) -O3 -I /usr/include/libxml2/ -fopenmp \
+	-msse4.2 -mavx2 -fopenacc
 CXXFLAGS = -std=c++17
 
 .PHONY: all
