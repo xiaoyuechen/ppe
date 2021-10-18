@@ -13,16 +13,16 @@ int arraySizes[5] = {64, 128, 1024, 65536, 33554432};
 
 void cpu_seqLoad(int *array, int arraySize);
 void cpu_randLoad(int *array); 
-/*
+
 void cpu_8Add() {
 
     char sum = 1;
 
-    __m256i sum_v0 = _mm256_set_epi8(0);
-    __m256i sum_v1 = _mm256_set_epi8(0);
-    __m256i sum_v2 = _mm256_set_epi8(0);
-    __m256i addthis_v = _mm256_set_epi8(1);
-
+    __m256i sum_v0 = _mm256_set_epi8(0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0, 0);
+    __m256i sum_v1 = _mm256_set_epi8(0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0, 0);
+    __m256i sum_v2 = _mm256_set_epi8(0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0, 0);
+    __m256i addthis_v = _mm256_set_epi8(0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0, 0);
+     
     for (int run=0; run<NUMBER_OF_RUNS; run++) {
 
         gettimeofday(&start_time, NULL);
@@ -38,9 +38,9 @@ void cpu_8Add() {
         double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
         double GOPS = (ITERS/time_in_sec)/1000000000;
         for (int i=0; i<16;i++)
-            sum+=((char*)(&sum_v0))[i]+((char*)(&sum_v1))[i]+((char*)(&sum_v2))[i]+((char*)(&sum_v3))[i];
+            sum+=((char*)(&sum_v0))[i]+((char*)(&sum_v1))[i]+((char*)(&sum_v2))[i];
         printf("sum: %d\n", sum);
-        printf("Completed %lu adds in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
+        printf("Completed %d adds in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
     }
 }
 
@@ -48,11 +48,10 @@ void cpu_FPAdd() {
 
     float sum = 1.0;
 
-    __m256i sum_v0 = _mm_set_ps(0.0);
-    __m256i sum_v1 = _mm_set_ps(0.0);
-    __m256i sum_v2 = _mm_set_ps(0.0);
-    __m256i sum_v3 = _mm_set_ps(0.0);
-    __m256i addthis_v = _mm_set_ps(1.0);
+    __m256 sum_v0 = _mm256_set_ps(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0);
+    __m256 sum_v1 = _mm256_set_ps(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0);
+    __m256 sum_v2 = _mm256_set_ps(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0);
+    __m256 addthis_v = _mm256_set_ps(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0);
 
     for (int run=0; run<NUMBER_OF_RUNS; run++) { 
 
@@ -62,7 +61,6 @@ void cpu_FPAdd() {
             sum_v0 = _mm256_add_ps(addthis_v, sum_v0);
             sum_v1 = _mm256_add_ps(addthis_v, sum_v1);
             sum_v2 = _mm256_add_ps(addthis_v, sum_v2);
-            sum_v3 = _mm256_add_ps(addthis_v, sum_v3);
         } 
 
         gettimeofday(&end_time, NULL);
@@ -70,12 +68,12 @@ void cpu_FPAdd() {
         double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
         double GOPS = (ITERS/time_in_sec)/1000000000;
         for (int i=0; i<16;i++)
-            sum+=((float*)(&sum_v0))[i]+((float*)(&sum_v1))[i]+((float*)(&sum_v2))[i]+((float*)(&sum_v3))[i];
-        printf("sum: %d\n", sum);
-        printf("Completed %lu adds in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
+            sum+=((float*)(&sum_v0))[i]+((float*)(&sum_v1))[i]+((float*)(&sum_v2))[i];
+        printf("sum: %f\n", sum);
+        printf("Completed %d adds in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
     } 
 }
-*/
+
 void run_cpu_seqLoad() {
     for (int i=0; i<numArraySizes; i++) {
         int arraySize = arraySizes[i];
@@ -103,7 +101,7 @@ void cpu_seqLoad(int *array, int numElems) {
 
         double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
         double GOPS = (ITERS/time_in_sec)/1000000000;
-        printf("Completed %lu loads in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
+        printf("Completed %d loads in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
 
     }  
     
@@ -153,7 +151,7 @@ void cpu_randLoad(int *array) {
 
         double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
         double GOPS = (ITERS/time_in_sec)/1000000000;
-        printf("Completed %lu loads in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
+        printf("Completed %d loads in %g seconds for %g GOPS.\n", ITERS, time_in_sec, GOPS);
 
     }
 
@@ -161,7 +159,7 @@ void cpu_randLoad(int *array) {
 
 
 void main() {
-  run_cpu_seqLoad();
-  run_cpu_randLoad();
-  //cpu_8Add();
+  //run_cpu_seqLoad();
+  //run_cpu_randLoad();
+  cpu_8Add();
 }
