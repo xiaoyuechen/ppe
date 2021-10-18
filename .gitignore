@@ -17,3 +17,6 @@ auto
 *.snm
 *.toc
 *.vrb
+
+bandwidth-1.10.4
+lab3/gpubench/gpubench

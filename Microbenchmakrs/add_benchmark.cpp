@@ -9,6 +9,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <xmmintrin.h>
 
 #define NUMBER_OF_RUNS 10
 #define TESTS_PER_RUN 1000*1000*1000L
@@ -31,7 +32,7 @@ void pause(void){
 
 int main(int argc, const char * argv[])
 {
-	int benchmark=1;
+  int benchmark= strtoll(argv + 1, 0, 10);
 
 	switch(benchmark){
 		case 1:
@@ -161,32 +162,32 @@ void add_microbenchmark3(char scale) {
  */
 void add_microbenchmark4(char scale) {
 
-    unsigned long LOCAL_TESTS_PER_RUN = TESTS_PER_RUN*scale;
+    // unsigned long LOCAL_TESTS_PER_RUN = TESTS_PER_RUN*scale;
 
-    char sum = 1;
+    // char sum = 1;
 
-    for (unsigned long run=0; run<NUMBER_OF_RUNS; run++) {
+    // for (unsigned long run=0; run<NUMBER_OF_RUNS; run++) {
 
-        gettimeofday(&start_time, NULL);
+    //     gettimeofday(&start_time, NULL);
 
-		__asm mov al, sum; //move sum to the lower significant 8 bits of the 16 bits wide %ax register
-        for (int test=0; test<LOCAL_TESTS_PER_RUN; test+=1) {
-			__asm add al, scale; //add resgister %al content with scale variable and storing the result in %al
-            /*
-             See http://locklessinc.com/articles/gcc_asm/
-             Format: Instruction : constraint for %0 (variable) : constraint for %1 (variable)
-             Constraints: +r input, r register
-            */
-        }
-		__asm mov al, sum; //moving the result from %al back to the variable sum
+    // 		__asm mov al, sum; //move sum to the lower significant 8 bits of the 16 bits wide %ax register
+    //     for (int test=0; test<LOCAL_TESTS_PER_RUN; test+=1) {
+    // 			__asm add al, scale; //add resgister %al content with scale variable and storing the result in %al
+    //         /*
+    //          See http://locklessinc.com/articles/gcc_asm/
+    //          Format: Instruction : constraint for %0 (variable) : constraint for %1 (variable)
+    //          Constraints: +r input, r register
+    //         */
+    //     }
+    // 		__asm mov al, sum; //moving the result from %al back to the variable sum
 
-        gettimeofday(&end_time, NULL);
+    //     gettimeofday(&end_time, NULL);
 
-        double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
-        double GOPS = (LOCAL_TESTS_PER_RUN/time_in_sec)/1000000000;
-        printf("sum: %d  ", sum);
-        printf("Completed %ld adds in %g seconds for %g GOPS.\n", LOCAL_TESTS_PER_RUN, time_in_sec, GOPS);
-    }
+    //     double time_in_sec = (end_time.tv_sec+end_time.tv_usec/1000000.0) - (start_time.tv_sec+start_time.tv_usec/1000000.0);
+    //     double GOPS = (LOCAL_TESTS_PER_RUN/time_in_sec)/1000000000;
+    //     printf("sum: %d  ", sum);
+    //     printf("Completed %ld adds in %g seconds for %g GOPS.\n", LOCAL_TESTS_PER_RUN, time_in_sec, GOPS);
+    // }
 }
 
 /*
