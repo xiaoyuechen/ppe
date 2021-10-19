@@ -1,0 +1,125 @@
+\documentclass[usenames,dvipsnames]{beamer}
+\usepackage[utf8]{inputenc}  % Linux, macOS: enable non-English characters
+%\usepackage[latin1]{inputenc}    % Windows: enable non-English characters
+\usetheme[numbers,sidebarshades]{UU}
+
+\usepackage{tabularx}
+\usepackage{helvet}
+\usepackage{courier}  % \texttt{...} gives thinner text and /\ displays OK
+\usepackage{graphicx}  % provides \includegraphics
+\usepackage{listings}
+
+\input{macros}
+\renewcommand{\todo}[1]{\blue{#1}}    % rather show to-do items in blue
+\hypersetup{colorlinks=true,urlcolor=blue}
+
+\lstset{% general command to set parameter(s)
+basicstyle=\footnotesize,
+% typewriter type for strings
+showstringspaces=false}
+
+\newcommand{\myPause}{}      %% Use this definition when preparing your talk
+%\newcommand{\myPause}{\pause}  %% Use this definition when giving your talk
+
+%% Colours (used only in macros.tex):
+\newcommand<>{\blue}[1]{\textcolor#2{blue}{#1}}
+\newcommand<>{\green}[1]{\textcolor#2{OliveGreen}{#1}}
+\newcommand<>{\red}[1]{\textcolor#2{red}{#1}}
+
+% Remove dropshadow from blocks, but they are still rounded:
+\setbeamertemplate{blocks}[rounded][shadow=false]
+% Remove gradient below header in blocks:
+\makeatletter
+\pgfdeclareverticalshading[lower.bg,upper.bg]{bmb@transition}{200cm}{color(0pt)=(lower.bg); color(4pt)=(lower.bg); color(4pt)=(upper.bg)}
+\makeatother
+% Non-gradient bulllets:
+\setbeamertemplate{section in toc}{\inserttocsectionnumber.~\inserttocsection}%[circle]
+\setbeamertemplate{subsection in toc}[circle]
+
+\title[Topic]{Lab 3}  %% Replace by your project title
+
+\subtitle{(Presentation of \today)}
+
+%% Replace by your name(s) and choose the encoding of line 2 or line 3:
+\author[]{Hannah Atmer \and Xiaoyue Chen \\
+  Team~6}  %% Replace t by your team number(s)
+
+\institute[]{Uppsala University \\ Sweden \\}
+
+\date[PPE]{
+  Course 1DL560: \\
+  Parallel Programming for Efficiency \\
+}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+% \setbeamercovered{transparent=5}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{CPU Benchmarks}
+
+\begin{frame}{8-bit and Floating-point Add}
+
+Our machine has 3 AVX ports, so we used AVX intrinsics and three add instructions at a time for optimal performance.
+
+\end{frame}
+
+\begin{frame}{8-bit and Floating-point Add Results}
+
+\begin{center}
+\includegraphics[width=1\textwidth]{add.png}
+\end{center}
+
+\end{frame}
+
+
+
+\begin{frame}{Sequential Results}
+\begin{center}
+\includegraphics[width=1\textwidth]{sequential.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Random Load}
+We shuffled the input arrays to avoid loops and skewed probabilities: In-place Fisher-Yates Shuffle
+
+\end{frame}
+
+\begin{frame}{Random Load Results}
+\begin{center}
+\includegraphics[width=1\textwidth]{random.png}
+\end{center}
+\end{frame}
+
+
+\section{GPU Benchmarks}
+
+\include{gpu}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
