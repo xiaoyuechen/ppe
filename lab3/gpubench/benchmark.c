@@ -206,7 +206,7 @@ add_char (size_t size)
   cl_kernel kernel = kernels[add_char_kernel];
 
   char scale = 7;
-  int load_per_thd = 100000;
+  int load_per_thd = 10000;
   size_t dim = size / load_per_thd;
   cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_WRITE_ONLY,
                                            dim * sizeof (char), 0, &cl_err));
