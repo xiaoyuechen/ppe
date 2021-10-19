@@ -23,9 +23,9 @@ SRCS = benchmarks.c
 OBJS = $(SRCS:.c=.o)
 
 DEBUG_FLAGS = -g
-CPPFLAGS = $(DEBUG_FLAGS) -O1 -I /usr/include/libxml2/ -fopenmp -mavx2
-	#-msse4.2 -mavx2 -fopenacc
+CPPFLAGS = $(DEBUG_FLAGS) -O0 -I /usr/include/libxml2/ -fopenmp -mavx2
 CXXFLAGS = -std=c++17
+LDFLAGS = -fopenmp
 
 .PHONY: all
 all: $(EXEC)
