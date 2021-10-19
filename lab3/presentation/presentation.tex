@@ -1,0 +1,42 @@
+\documentclass{beamer}
+
+% \setbeameroption{show notes on second screen=right}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+\AtBeginSection[]
+{
+\begin{frame}<beamer>
+\frametitle{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+}
+
+\usepackage{listings}
+\lstset{language=C}
+\usepackage{booktabs}
+
+\title{PPE Lab 3 Presentation}
+\subtitle{Profiling --- Do it Right!}
+
+\author{Xiaoyue Chen \and Hannah Atmer}
+
+\begin{document}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+\end{frame}
+
+\include{cpu}
+\include{gpu}
+\include{discussion}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
