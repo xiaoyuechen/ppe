@@ -72,10 +72,51 @@
 
 \subsection{Your measured performance results}
 
-
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{p{0.2\textwidth}p{0.2\textwidth}p{0.2\textwidth}p{0.2\textwidth}p{0.2\textwidth}}
+      \toprule
+      Operation & Predicted Max CPU Performance & Predicted Max CPU Performance & Max Measured CPU Performance & Max Measured GPU Performance \\
+      \midrule
+      8-bit unsigned add & 787 GOPS & 1734 GOPS & 354 GOPS & 41 GOPS \\
+      floating point add & 196 GFLOPS & 1734 GFLOPS & 89 GFLOPS & 68 GFLOPS \\
+      Sequentially load a 32-bit int from an array & 3.6 GOPS & 48 GOPS & .5 GOPS & 369 GOPS \\
+      Randomly load a 32 bit int from an array & .2 GOPS & 1.5 GOPS & .009 GOPS & 1.3 GOPS \\
+      Data transfer from CPU to GPU & & 1.5 GB/s & & 4.4 GB/s \\
+      \bottomrule
+    \end{tabular}
+    \caption{Performance estimation for CPU}
+  \end{table}
 
 \subsection{Graph of results}
 
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{add.png}
+    \caption{Actual Performance Impact: Adding}
+    \label{fig:add}
+\end{figure}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{sequential.png}
+    \caption{Actual Performance Impact: Sequential Load}
+    \label{fig:sequential}
+\end{figure}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{random.png}
+    \caption{Actual Performance Impact: Random Load}
+    \label{fig:random}
+\end{figure}
+
+\begin{figure}[h!t]
+    \centering
+    \includegraphics[width=1\textwidth]{dataTransfer.png}
+    \caption{Actual Performance Impact: Data Transfer}
+    \label{fig:transfer}
+\end{figure}
 
 % Discussion
 \section{Discussion}
