@@ -16,17 +16,15 @@
  */
 
 #include "benchmark.h"
-#include <sys/types.h>
-
-#define CL_TARGET_OPENCL_VERSION 300
 
 #include <CL/cl.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+#include <time.h>
 
 extern int errno;
 static cl_int cl_err;
@@ -132,17 +130,6 @@ cl_error_str (cl_int err)
     }                                                                         \
   while (0)
 
-uint32_t
-GetTimevalMicroSeconds (const struct timeval *start,
-                        const struct timeval *stop)
-{
-  return ((stop->tv_sec - start->tv_sec) * 1000000 + stop->tv_usec
-          - start->tv_usec);
-}
-
-static const char kernel_file[] = "kernel.cl";
-static const size_t MAX_SOURCE_SIZE = 0x100000;
-
 #define KERNELS                                                               \
   X (add_char)                                                                \
   X (add_float)                                                               \
@@ -159,6 +146,9 @@ enum Kernel
 #define X(name) [name##_kernel] = #name,
 static const char *const kernel_names[kernel_count] = { KERNELS };
 #undef X
+
+static const char kernel_file[] = "kernel.cl";
+static const size_t MAX_SOURCE_SIZE = 0x100000;
 
 static cl_device_id device_id;
 static cl_context context;
@@ -203,6 +193,12 @@ init ()
       clCreateCommandQueueWithProperties (context, device_id, 0, &cl_err));
 }
 
+#define START_TIMER(timer) clock_t timer##_start = clock ()
+
+#define END_TIMER(timer)                                                      \
+  clock_t timer##_end = clock ();                                             \
+  double timer = ((double)(timer##_end - timer##_start)) / CLOCKS_PER_SEC
+
 void
 add_char (size_t size)
 {
@@ -212,18 +208,14 @@ add_char (size_t size)
   CL_CHECK (clSetKernelArg (kernel, 0, sizeof (char), &scale));
   CL_CHECK (clFinish (cmd_queue));
 
-  struct timeval start, end;
-  gettimeofday (&start, 0);
-
+  START_TIMER (timer);
   CL_CHECK (
       clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
+  END_TIMER (timer);
 
-  gettimeofday (&end, 0);
   printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end),
-          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
-              / 1.0E9);
+          (uint32_t)(timer * 1E6), size / 1E9 / timer);
 }
 
 void
@@ -235,18 +227,14 @@ add_float (size_t size)
   CL_CHECK (clSetKernelArg (kernel, 0, sizeof (float), &scale));
   CL_CHECK (clFinish (cmd_queue));
 
-  struct timeval start, end;
-  gettimeofday (&start, 0);
-
+  START_TIMER (timer);
   CL_CHECK (
       clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
+  END_TIMER (timer);
 
-  gettimeofday (&end, 0);
-  printf ("%s %zu takes %u us or %g GFLOPS\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end),
-          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
-              / 1.0E9);
+  printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
+          (uint32_t)(timer * 1E6), size / 1E9 / timer);
 }
 
 void
@@ -262,19 +250,16 @@ load_int_seq (size_t size)
       clSetKernelArg (kernels[load_seq_kernel], 1, sizeof (cl_mem), &buf));
   CL_CHECK (clFinish (cmd_queue));
 
-  struct timeval start, end;
-  gettimeofday (&start, 0);
-
   size_t one = 1;
+
+  START_TIMER (timer);
   CL_CHECK (clEnqueueNDRangeKernel (cmd_queue, kernels[load_seq_kernel], 1, 0,
                                     &one, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
+  END_TIMER (timer);
 
-  gettimeofday (&end, 0);
   printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end),
-          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
-              / 1.0E9);
+          (uint32_t)(timer * 1E6), size / 1E9 / timer);
 
   clReleaseMemObject (buf);
 }
@@ -303,19 +288,15 @@ load_int_rand (size_t size)
   CL_CHECK (clSetKernelArg (kernel, 1, sizeof (cl_mem), &buf));
   CL_CHECK (clFinish (cmd_queue));
 
-  struct timeval start, end;
-  gettimeofday (&start, 0);
-
+  START_TIMER (timer);
   size_t one = 1;
   CL_CHECK (
       clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &one, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
+  END_TIMER (timer);
 
-  gettimeofday (&end, 0);
   printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end),
-          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
-              / 1.0E9);
+          (uint32_t)(timer * 1E6), size / 1E9 / timer);
 
   clReleaseMemObject (buf);
   free (array);
@@ -329,15 +310,10 @@ transfer_data (size_t size)
                                            sizeof (char) * size, 0, &cl_err));
   CL_CHECK (clFinish (cmd_queue));
 
-  struct timeval start, end;
-  gettimeofday (&start, 0);
-
+  START_TIMER (timer);
   CL_CHECK (clEnqueueWriteBuffer (cmd_queue, buf, 0, 0, size, array, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
-
-  gettimeofday (&end, 0);
+  END_TIMER (timer);
   printf ("%s %zu takes %u us or %g GB/s\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end),
-          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
-              / 1.0E9);
+          (uint32_t)(timer * 1E6), size / 1E9 / timer);
 }

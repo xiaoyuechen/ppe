@@ -23,7 +23,7 @@ SRCS = gpubench.c benchmark.c
 OBJS = $(SRCS:.c=.o)
 
 DEBUG_FLAGS = -g
-CFLAGS = $(DEBUG_FLAGS) -std=c99 -O3 -mavx2
+CFLAGS = $(DEBUG_FLAGS) -std=c99 -O3 -mavx2 -DCL_TARGET_OPENCL_VERSION=300
 LDLIBS = -lOpenCL
 
 .PHONY: all
