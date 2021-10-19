@@ -93,7 +93,7 @@ const char *const cl_err_str[]
         "CL_INVALID_DEVICE_PARTITION_COUNT" };
 
 const char *
-GetCLErrorStr (cl_int err)
+cl_error_str (cl_int err)
 {
   int ind = err >= -19 ? -err : -err - 10;
   return cl_err_str[ind];
@@ -102,7 +102,7 @@ GetCLErrorStr (cl_int err)
 #define CL_PRINT_ERROR(err, func)                                             \
   do                                                                          \
     {                                                                         \
-      const char *err_str = GetCLErrorStr (err);                              \
+      const char *err_str = cl_error_str (err);                               \
       fprintf (stderr, "%s: When calling %s:\n", __FILE__, #func);            \
       fprintf (stderr, "%s:%lu: CL error: %s (%d)\n", __FILE__,               \
                __LINE__ + 0UL, err_str, err);                                 \
@@ -115,7 +115,7 @@ GetCLErrorStr (cl_int err)
       cl_int err = (x);                                                       \
       if (err)                                                                \
         {                                                                     \
-          const char *err_str = GetCLErrorStr (err);                          \
+          const char *err_str = cl_error_str (err);                           \
           CL_PRINT_ERROR (err, x);                                            \
           exit (EXIT_FAILURE);                                                \
         }                                                                     \
@@ -126,7 +126,7 @@ GetCLErrorStr (cl_int err)
   x;                                                                          \
   if (cl_err)                                                                 \
     {                                                                         \
-      const char *err_str = GetCLErrorStr (cl_err);                           \
+      const char *err_str = cl_error_str (cl_err);                            \
       CL_PRINT_ERROR (cl_err, x);                                             \
       exit (EXIT_FAILURE);                                                    \
     }                                                                         \
@@ -143,20 +143,22 @@ GetTimevalMicroSeconds (const struct timeval *start,
 static const char kernel_file[] = "kernel.cl";
 static const size_t MAX_SOURCE_SIZE = 0x100000;
 
+#define KERNELS                                                               \
+  X (add_char)                                                                \
+  X (add_float)                                                               \
+  X (load_seq)                                                                \
+  X (load_rand)
+
+#define X(name) name##_kernel,
 enum Kernel
 {
-  add_char_kernel,
-  add_float_kernel,
-  load_seq_kernel,
-  load_rand_kernel,
-  kernel_count
+  KERNELS kernel_count
 };
+#undef X
 
-static const char *const kernel_names[kernel_count]
-    = { [add_char_kernel] = "add_char",
-        [add_float_kernel] = "add_float",
-        [load_seq_kernel] = "load_seq",
-        [load_rand_kernel] = "load_rand" };
+#define X(name) [name##_kernel] = #name,
+static const char *const kernel_names[kernel_count] = { KERNELS };
+#undef X
 
 static cl_device_id device_id;
 static cl_context context;
@@ -218,12 +220,14 @@ add_char (size_t size)
   CL_CHECK (clFinish (cmd_queue));
 
   gettimeofday (&end, 0);
-  printf ("%s %zu takes %u us\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end));
+  printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end),
+          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
+              / 1.0E9);
 }
 
 void
-add_float(size_t size)
+add_float (size_t size)
 {
   cl_kernel kernel = kernels[add_float_kernel];
 
@@ -239,8 +243,10 @@ add_float(size_t size)
   CL_CHECK (clFinish (cmd_queue));
 
   gettimeofday (&end, 0);
-  printf ("%s %zu takes %u us\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end));
+  printf ("%s %zu takes %u us or %g GFLOPS\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end),
+          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
+              / 1.0E9);
 }
 
 void
@@ -265,8 +271,10 @@ load_int_seq (size_t size)
   CL_CHECK (clFinish (cmd_queue));
 
   gettimeofday (&end, 0);
-  printf ("%s %zu takes %u us\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end));
+  printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end),
+          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
+              / 1.0E9);
 
   clReleaseMemObject (buf);
 }
@@ -283,7 +291,7 @@ load_int_rand (size_t size)
       int r = j + (rand () % (size - j));
       int tmp = array[r];
       array[r] = array[j];
-      array[j] = r;
+      array[j] = tmp;
     }
 
   cl_mem buf = CL_CHECK_R (
@@ -296,7 +304,6 @@ load_int_rand (size_t size)
   CL_CHECK (clFinish (cmd_queue));
 
   struct timeval start, end;
-
   gettimeofday (&start, 0);
 
   size_t one = 1;
@@ -305,9 +312,32 @@ load_int_rand (size_t size)
   CL_CHECK (clFinish (cmd_queue));
 
   gettimeofday (&end, 0);
-  printf ("%s %zu takes %u us\n", __func__, size,
-          GetTimevalMicroSeconds (&start, &end));
+  printf ("%s %zu takes %u us or %g GOPS\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end),
+          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
+              / 1.0E9);
 
   clReleaseMemObject (buf);
   free (array);
+}
+
+void
+transfer_data (size_t size)
+{
+  char *array = malloc (sizeof (char) * size);
+  cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_READ_ONLY,
+                                           sizeof (char) * size, 0, &cl_err));
+  CL_CHECK (clFinish (cmd_queue));
+
+  struct timeval start, end;
+  gettimeofday (&start, 0);
+
+  CL_CHECK (clEnqueueWriteBuffer (cmd_queue, buf, 0, 0, size, array, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+
+  gettimeofday (&end, 0);
+  printf ("%s %zu takes %u us or %g GB/s\n", __func__, size,
+          GetTimevalMicroSeconds (&start, &end),
+          (double)size / (GetTimevalMicroSeconds (&start, &end)) * 1.0E6
+              / 1.0E9);
 }

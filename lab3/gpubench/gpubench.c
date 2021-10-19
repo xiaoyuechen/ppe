@@ -29,6 +29,7 @@ main (int argc, char *argv[argc + 1])
   add_float (SIZE);
   load_int_seq (SIZE);
   load_int_rand (SIZE);
+  transfer_data (SIZE);
 
   exit (EXIT_SUCCESS);
 }

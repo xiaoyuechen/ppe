@@ -25,7 +25,7 @@ add_char (char scale)
 kernel void
 add_float (float scale)
 {
-  char sum = 1.0f;
+  float sum = 1.0f;
   sum += scale;
 }
 
