@@ -205,12 +205,18 @@ add_char (size_t size)
   cl_kernel kernel = kernels[add_char_kernel];
 
   char scale = 7;
-  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (char), &scale));
+  int load_per_thd = 100000;
+  size_t dim = size / load_per_thd;
+  cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_WRITE_ONLY,
+                                           dim * sizeof (char), 0, &cl_err));
+  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (int), &load_per_thd));
+  CL_CHECK (clSetKernelArg (kernel, 1, sizeof (char), &scale));
+  CL_CHECK (clSetKernelArg (kernel, 2, sizeof (cl_mem), &buf));
   CL_CHECK (clFinish (cmd_queue));
 
   START_TIMER (timer);
   CL_CHECK (
-      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
+      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &dim, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
   END_TIMER (timer);
 
@@ -224,12 +230,18 @@ add_float (size_t size)
   cl_kernel kernel = kernels[add_float_kernel];
 
   float scale = 7.0f;
-  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (float), &scale));
+  int load_per_thd = 10000;
+  size_t dim = size / load_per_thd;
+  cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_WRITE_ONLY,
+                                           dim * sizeof (float), 0, &cl_err));
+  CL_CHECK (clSetKernelArg (kernel, 0, sizeof (int), &load_per_thd));
+  CL_CHECK (clSetKernelArg (kernel, 1, sizeof (float), &scale));
+  CL_CHECK (clSetKernelArg (kernel, 2, sizeof (cl_mem), &buf));
   CL_CHECK (clFinish (cmd_queue));
 
   START_TIMER (timer);
   CL_CHECK (
-      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &size, 0, 0, 0, 0));
+      clEnqueueNDRangeKernel (cmd_queue, kernel, 1, 0, &dim, 0, 0, 0, 0));
   CL_CHECK (clFinish (cmd_queue));
   END_TIMER (timer);
 

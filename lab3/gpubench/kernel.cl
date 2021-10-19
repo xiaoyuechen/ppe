@@ -16,17 +16,25 @@
  */
 
 kernel void
-add_char (char scale)
+add_char (int iter, char scale, global char *out)
 {
   char sum = 1;
-  sum += scale;
+  for (int i = 0; i < iter; ++i)
+    {
+      sum += scale;
+    }
+  out[get_global_id (0)] = sum;
 }
 
 kernel void
-add_float (float scale)
+add_float (int iter, float scale, global float *out)
 {
   float sum = 1.0f;
-  sum += scale;
+  for (int i = 0; i < iter; ++i)
+    {
+      sum += scale;
+    }
+  out[get_global_id (0)] = sum;
 }
 
 kernel void
