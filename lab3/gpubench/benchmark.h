@@ -1,4 +1,5 @@
 /*
+ * gpubench --- benchmarks for GPUs
  * Copyright (C) 2021  Xiaoyue Chen and Hannah Atmer
  *
  * This program is free software: you can redistribute it and/or modify

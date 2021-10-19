@@ -3,4 +3,5 @@
 
 ((nil . ((lice:default-license . "gpl-3.0")
 	 (lice:copyright-holder . "Xiaoyue Chen and Hannah Atmer")))
- ("lab3/gpubench" . ((one-line-description . "gpubench --- benchmarks for GPUs"))))
+ ("lab3/gpubench" .
+  ((nil . ((one-line-description . "gpubench --- benchmarks for GPUs"))))))
