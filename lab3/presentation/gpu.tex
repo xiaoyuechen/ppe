@@ -117,45 +117,26 @@ add_char (int iter, char scale, global char *out)
 
 \begin{frame}[fragile]
   \frametitle{\texttt{load\_seq}}
-\begin{lstlisting}[basicstyle=\footnotesize]
-kernel void
-load_seq (int size, global int *array)
-{
-  int loaded;
-  for (int i = 0; i < size; ++i)
-    {
-      loaded = array[i];
-    }
-}
-\end{lstlisting}
+  \lstinputlisting[basicstyle=\footnotesize, linerange=41-50]{../gpubench/kernel.cl}
   \pause{}
   \begin{alertblock}{Results}
     Sequentially read an array of \(4~\mathit{GB}\)
     \begin{itemize}
-    \item \(1284~\mathit{GB/s}\)
-    \item \(321~\mathit{GOPS}\)
+    \item \(3.3~\mathit{GB/s}\)
+    \item \(0.82~\mathit{GOPS}\)
     \end{itemize}
   \end{alertblock}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{\texttt{load\_rand}}
-\begin{lstlisting}[basicstyle=\footnotesize]
-kernel void
-load_rand (int size, global int *array)
-{
-  for (int next = 0; next < size;)
-    {
-      next = array[next];
-    }
-}
-\end{lstlisting}
+  \lstinputlisting[basicstyle=\footnotesize, linerange=52-61]{../gpubench/kernel.cl}
   \pause{}
   \begin{alertblock}{Results}
     Sequentially read an array of \(4~\mathit{GB}\)
     \begin{itemize}
-    \item \(6~\mathit{GB/s}\)
-    \item \(1.25~\mathit{GOPS}\)
+    \item \(0.023~\mathit{GB/s}\)
+    \item \(0.006~\mathit{GOPS}\)
     \end{itemize}
   \end{alertblock}
 \end{frame}
@@ -175,7 +156,7 @@ load_rand (int size, global int *array)
   CL_CHECK (clFinish (cmd_queue));
   END_TIMER (timer);
 \end{lstlisting}
-\pause{}
+  \pause{}
   \begin{alertblock}{Results}
     Transfer an array of \(1~\mathit{GB}\) from CPU to GPU
     \begin{itemize}
