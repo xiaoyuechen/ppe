@@ -187,63 +187,75 @@ motionVectorSearch (Frame *source, Frame *match, int width, int height)
   int inset = (int)max ((float)window_size, (float)block_size);
   int iter = 0;
 
-  for (int my = inset; my < height - (inset + window_size) + 1;
-       my += block_size)
+  if (args.optimization_mode & MotionVectorOpenCL)
     {
-      for (int mx = inset; mx < width - (inset + window_size) + 1;
-           mx += block_size)
-        {
-
-          float best_match_sad = 1e10;
-          int best_match_location[2] = { 0, 0 };
-
-          for (int sy = my - window_size; sy < my + window_size; sy++)
-            {
-              for (int sx = mx - window_size; sx < mx + window_size; sx++)
-                {
-                  float current_match_sad = 0;
-                  // Do the SAD
-                  for (int y = 0; y < block_size; y++)
-                    {
-                      for (int x = 0; x < block_size; x++)
-                        {
-                          int match_x = mx + x;
-                          int match_y = my + y;
-                          int search_x = sx + x;
-                          int search_y = sy + y;
-                          float diff_Y = abs (
-                              match->Y->data[match_x * width + match_y]
-                              - source->Y->data[search_x * width + search_y]);
-                          float diff_Cb = abs (
-                              match->Cb->data[match_x * width + match_y]
-                              - source->Cb->data[search_x * width + search_y]);
-                          float diff_Cr = abs (
-                              match->Cr->data[match_x * width + match_y]
-                              - source->Cr->data[search_x * width + search_y]);
-
-                          float diff_total = Y_weight * diff_Y
-                                             + Cb_weight * diff_Cb
-                                             + Cr_weight * diff_Cr;
-                          current_match_sad = current_match_sad + diff_total;
-                        }
-                    } // end SAD
-
-                  if (current_match_sad <= best_match_sad)
-                    {
-                      best_match_sad = current_match_sad;
-                      best_match_location[0] = sx - mx;
-                      best_match_location[1] = sy - my;
-                    }
-                }
-            }
-
-          mVector v;
-          v.a = best_match_location[0];
-          v.b = best_match_location[1];
-          motion_vectors->push_back (v);
-        }
+      // use GPU
+      motionVectorsCL(motion_vectors, source, match, width, height);
     }
+  else 
+    { 
+		// for each row, stepping by block size
+		for (int my = inset; my < height - (inset + window_size) + 1;
+				 my += block_size)
+			{
+				// for each col, stepping by block size
+				for (int mx = inset; mx < width - (inset + window_size) + 1;
+						 mx += block_size)
+					{
 
+						float best_match_sad = 1e10;
+						int best_match_location[2] = { 0, 0 };
+
+						// for each pixel from top edge of window to bottom edge of window
+						for (int sy = my - window_size; sy < my + window_size; sy++)
+							{
+								// for each pixel from left -> right edges of window = window x window sized "window" around block we are looking at
+								for (int sx = mx - window_size; sx < mx + window_size; sx++)
+									{
+										float current_match_sad = 0;
+										// Do the SAD
+										// for each pixel y coord in this block (top left corner of window)
+										for (int y = 0; y < block_size; y++)
+											{
+												// for each pixel x coord
+												for (int x = 0; x < block_size; x++)
+													{
+														int match_x = mx + x;
+														int match_y = my + y;
+														int search_x = sx + x;
+														int search_y = sy + y;
+														float diff_Y = abs (
+																match->Y->data[match_x * width + match_y]
+																- source->Y->data[search_x * width + search_y]);
+														float diff_Cb = abs (
+																match->Cb->data[match_x * width + match_y]
+																- source->Cb->data[search_x * width + search_y]);
+														float diff_Cr = abs (
+																match->Cr->data[match_x * width + match_y]
+																- source->Cr->data[search_x * width + search_y]);
+
+														float diff_total = Y_weight * diff_Y
+																							 + Cb_weight * diff_Cb
+																							 + Cr_weight * diff_Cr;
+														current_match_sad = current_match_sad + diff_total;
+													}
+											} // end SAD
+
+										if (current_match_sad <= best_match_sad)
+											{
+												best_match_sad = current_match_sad;
+												best_match_location[0] = sx - mx;
+												best_match_location[1] = sy - my;
+											}
+									}
+							}
+						mVector v;
+						v.a = best_match_location[0];
+						v.b = best_match_location[1];
+						motion_vectors->push_back (v);
+					}
+			}
+  }
   return motion_vectors;
 }
 
@@ -584,6 +596,11 @@ encode ()
   if (args.optimization_mode & OpenCL)
     {
       initCL (width, height, stderr);
+    }
+
+  if (args.optimization_mode & MotionVectorsOpenCL)
+    {
+      initMVCL();
     }
 
   createStatsFile ();
