@@ -255,12 +255,19 @@ load_int_seq (size_t size)
 {
   cl_mem buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_READ_ONLY,
                                            sizeof (int) * size, 0, &cl_err));
+  int out = 0;
+  cl_mem bufout = CL_CHECK_R (
+      clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                      sizeof (int), &out, &cl_err));
 
   int size_int = size;
+
   CL_CHECK (
       clSetKernelArg (kernels[load_seq_kernel], 0, sizeof (int), &size_int));
   CL_CHECK (
       clSetKernelArg (kernels[load_seq_kernel], 1, sizeof (cl_mem), &buf));
+  CL_CHECK (
+      clSetKernelArg (kernels[load_seq_kernel], 2, sizeof (cl_mem), &bufout));
   CL_CHECK (clFinish (cmd_queue));
 
   size_t one = 1;
@@ -283,6 +290,7 @@ load_int_rand (size_t size)
   cl_kernel kernel = kernels[load_rand_kernel];
 
   int *array = malloc (sizeof (int) * size);
+  int out = 0;
 
   for (int j = 0; j < size; j++)
     {
@@ -296,9 +304,16 @@ load_int_rand (size_t size)
       clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                       sizeof (int) * size, array, &cl_err));
 
+
+  cl_mem bufout = CL_CHECK_R (
+      clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                      sizeof (int), &out, &cl_err));
+
+
   int size_int = size;
   CL_CHECK (clSetKernelArg (kernel, 0, sizeof (int), &size_int));
   CL_CHECK (clSetKernelArg (kernel, 1, sizeof (cl_mem), &buf));
+  CL_CHECK (clSetKernelArg (kernel, 2, sizeof (cl_mem), &bufout));
   CL_CHECK (clFinish (cmd_queue));
 
   START_TIMER (timer);

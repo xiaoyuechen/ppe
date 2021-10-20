@@ -39,20 +39,23 @@ add_float (int iter, float scale, global float *out)
 }
 
 kernel void
-load_seq (int size, global int *array)
+load_seq (int size, global int *array, global int *out)
 {
   int loaded;
   for (int i = 0; i < size; ++i)
     {
       loaded = array[i];
     }
+  *out = loaded;
 }
 
 kernel void
-load_rand (int size, global int *array)
+load_rand (int size, global int *array, global int *out)
 {
-  for (int next = 0; next < size;)
+  int next = 0;
+  for (int i = 0; i < size; ++i)
     {
       next = array[next];
     }
+  *out = next;
 }
