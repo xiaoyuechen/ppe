@@ -36,7 +36,7 @@ DEBUG_FLAGS = -g
 CC = gcc
 CXX = g++
 
-CPPFLAGS = $(DEBUG_FLAGS) -O0 -I /usr/include/libxml2/ -fopenmp \
+CPPFLAGS = $(DEBUG_FLAGS) -O3 -I /usr/include/libxml2/ -fopenmp \
 	-msse4.1 -mavx2 -fopenacc
 CFLAGS = -std=c99
 CXXFLAGS = -std=c++17
@@ -55,7 +55,7 @@ xml_aux.o: xml_aux.h config.h
 cmd_args.o: cmd_args.h
 opt_opencl.o: opt_opencl.h kernel.cl
 opt_openacc.o: opt_openacc.h
-main.o: config.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h \
+main.o: config.h test_setup.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h \
 	opt_opencl.h opt_openacc.h
 
 .PHONY: clean

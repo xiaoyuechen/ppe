@@ -74,12 +74,45 @@ const char *const cl_err_str[]
         "CL_INVALID_LINKER_OPTIONS",
         "CL_INVALID_DEVICE_PARTITION_COUNT" };
 
+void initMotionKernel ();
+
 const char *
 GetCLErrorStr (cl_int err)
 {
   int ind = err >= -19 ? -err : -err - 10;
   return cl_err_str[ind];
 }
+
+#define CL_PRINT_ERROR(err, func)                                             \
+  do                                                                          \
+    {                                                                         \
+      const char *err_str = GetCLErrorStr (err);                              \
+      fprintf (stderr, "%s: When calling %s:\n", __FILE__, #func);            \
+      fprintf (stderr, "%s:%lu: CL error: %s (%d)\n", __FILE__,               \
+               __LINE__ + 0UL, err_str, err);                                 \
+    }                                                                         \
+  while (0)
+
+#define CL_CHECK(x)                                                           \
+  do                                                                          \
+    {                                                                         \
+      cl_int err = (x);                                                       \
+      if (err)                                                                \
+        {                                                                     \
+          CL_PRINT_ERROR (err, x);                                            \
+          exit (EXIT_FAILURE);                                                \
+        }                                                                     \
+    }                                                                         \
+  while (0)
+
+#define CL_CHECK_R(x)                                                         \
+  x;                                                                          \
+  if (cl_err)                                                                 \
+    {                                                                         \
+      CL_PRINT_ERROR (cl_err, x);                                             \
+      exit (EXIT_FAILURE);                                                    \
+    }                                                                         \
+  while (0)
 
 void
 Error (const char *restrict format, ...)
@@ -180,30 +213,6 @@ CreateBuffer (cl_context context, size_t size)
   return mem;
 }
 
-void *
-AllocPinnedMem (cl_mem *pinned_buf, cl_context context, cl_command_queue cmdq,
-                cl_map_flags map_flags, size_t size)
-{
-  *pinned_buf = clCreateBuffer (
-      context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, size, 0, &cl_err);
-  if (cl_err)
-    CL_Error ("Error creating pinned buffer");
-  void *pinned_mem = clEnqueueMapBuffer (cmdq, *pinned_buf, CL_FALSE,
-                                         map_flags, 0, size, 0, 0, 0, &cl_err);
-  if (cl_err)
-    CL_Error ("Error mapping pinned buffer");
-  return pinned_mem;
-}
-
-void
-ReleasePinnedMem (cl_mem pinned_buf, void *pinned_mem, cl_command_queue cmdq)
-{
-  cl_err = clEnqueueUnmapMemObject (cmdq, pinned_buf, pinned_mem, 0, 0, 0);
-  if (cl_err)
-    CL_Error ("Error unmapping pinned buffer");
-  clReleaseMemObject (pinned_mem);
-}
-
 void
 EnqueueWriteBuffer (cl_command_queue cmdq, cl_mem buff, size_t size,
                     const void *data)
@@ -229,16 +238,23 @@ GetTimevalMicroSeconds (const struct timeval *start,
           - start->tv_usec);
 }
 
+static int width, height;
+static FILE *output_file;
+
 static cl_device_id device_id;
 static cl_context context;
 static cl_program program;
-static cl_kernel convert_kernel;
 static cl_command_queue cmd_queue;
-static float *pinned_mem[3];
-static cl_mem pinned_buf[3];
+
+/* CL objects for convert kernel */
+static cl_kernel convert_kernel;
 static cl_mem buf[3];
-static int width, height;
-static FILE *output_file;
+
+/* CL objects for motion kernel */
+static cl_kernel motion_kernel;
+static cl_mem sbuf[3];
+static cl_mem mbuf[3];
+static cl_mem motion_buf;
 
 void
 initCL (int pwidth, int pheight, FILE *fd)
@@ -253,14 +269,17 @@ initCL (int pwidth, int pheight, FILE *fd)
   context = CreateContext (&device_id);
   program = CreateProgram ("kernel.cl", context);
   convert_kernel = CreateKernel (program, "convert");
+  motion_kernel = CreateKernel (program, "motionVectorSearch");
   cmd_queue = CreateCommandQueue (context, device_id);
 
   // Create memory buffers on the device for each channel
-  for (int i = 0; i < 3; ++i)
-    {
-      size_t size = width * height * sizeof (float);
-      buf[i] = CreateBuffer (context, size);
-    }
+  /* for (int i = 0; i < 3; ++i) */
+  /*   { */
+  /*     size_t size = width * height * sizeof (float); */
+  /*     buf[i] = CreateBuffer (context, size); */
+  /*   } */
+  initMotionKernel ();
+
   clFinish (cmd_queue);
 
   gettimeofday (&stop, 0);
@@ -321,4 +340,56 @@ convertCL (size_t size, const float *R, const float *G, const float *B,
   gettimeofday (&stop, 0);
   fprintf (output_file, "CL copy d2h time: %u\n",
            GetTimevalMicroSeconds (&start, &stop));
+}
+
+void
+initMotionKernel ()
+{
+  size_t size[] = { width, height };
+  size_t block_size = 16;
+  for (size_t c = 0; c < 3; ++c)
+    {
+      size_t buff_size = size[0] * size[1] * sizeof (float);
+      sbuf[c] = CL_CHECK_R (
+          clCreateBuffer (context, CL_MEM_READ_ONLY, buff_size, 0, &cl_err));
+      mbuf[c] = CL_CHECK_R (
+          clCreateBuffer (context, CL_MEM_READ_ONLY, buff_size, 0, &cl_err));
+    }
+
+  size_t motion_buf_size = (size[0] / block_size - 2)
+                           * (size[1] / block_size - 2) * sizeof (int) * 2;
+  motion_buf = CL_CHECK_R (clCreateBuffer (context, CL_MEM_WRITE_ONLY,
+                                           motion_buf_size, 0, &cl_err));
+
+  for (size_t c = 0; c < 3; ++c)
+    {
+      CL_CHECK (clSetKernelArg (motion_kernel, c, sizeof (cl_mem), &sbuf[c]));
+      CL_CHECK (
+          clSetKernelArg (motion_kernel, 3 + c, sizeof (cl_mem), &mbuf[c]));
+    }
+
+  CL_CHECK (clSetKernelArg (motion_kernel, 6, sizeof (cl_mem), &motion_buf));
+}
+
+void
+motionCL (size_t size[2], size_t block_size, const float *s[3],
+          const float *m[3], int *out_motion_vector)
+{
+  size_t local_work_size[2] = { block_size, block_size };
+  for (size_t c = 0; c < 3; ++c)
+    {
+      size_t buff_size = size[0] * size[1] * sizeof (float);
+      CL_CHECK (clEnqueueWriteBuffer (cmd_queue, sbuf[c], 0, 0, buff_size,
+                                      s[c], 0, 0, 0));
+      CL_CHECK (clEnqueueWriteBuffer (cmd_queue, mbuf[c], 0, 0, buff_size,
+                                      m[c], 0, 0, 0));
+    }
+  CL_CHECK (clEnqueueNDRangeKernel (cmd_queue, motion_kernel, 2, 0, size,
+                                    local_work_size, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
+  size_t motion_buf_size = (size[0] / block_size - 2)
+                           * (size[1] / block_size - 2) * sizeof (int) * 2;
+  CL_CHECK (clEnqueueReadBuffer (cmd_queue, motion_buf, 0, 0, motion_buf_size,
+                                 out_motion_vector, 0, 0, 0));
+  CL_CHECK (clFinish (cmd_queue));
 }

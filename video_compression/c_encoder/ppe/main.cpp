@@ -4,7 +4,9 @@
 #include "dct8x8_block.h"
 #include "opt_openacc.h"
 #include "opt_opencl.h"
+#include "test_setup.h"
 #include "xml_aux.h"
+#include <cstddef>
 #include <cstdio>
 #include <iostream>
 #include <math.h>
@@ -103,7 +105,7 @@ convertRGBtoYCbCr (Image *in, Image *out)
   float *Cb = out->gc->data;
   float *Cr = out->bc->data;
 
-  if (args.optimization_mode & OpenCL)
+  if (0) /* TODO(Xiaoyue Chen): enable OpenCL version of convert */
     {
       if (!args.opencl_num_threads)
         convertCL (size, R, G, B, Y, Cb, Cr, size);
@@ -170,6 +172,21 @@ lowPass (Channel *in, Channel *out)
 }
 
 std::vector<mVector> *
+motionVectorSearchCL (Frame *source, Frame *match, int width, int height)
+{
+  const float *s[] = { source->Y->data, source->Cb->data, source->Cr->data };
+  const float *m[] = { match->Y->data, match->Cb->data, match->Cr->data };
+  size_t size[] = { (size_t)width, (size_t)height };
+  int block_size = 16;
+  size_t motion_vector_size
+      = (width / block_size - 2) * (height / block_size - 2);
+  std::vector<mVector> *motion_vectors
+      = new std::vector<mVector> (motion_vector_size);
+  motionCL (size, block_size, s, m, (int *)motion_vectors->data ());
+  return motion_vectors;
+}
+
+std::vector<mVector> *
 motionVectorSearch (Frame *source, Frame *match, int width, int height)
 {
   std::vector<mVector> *motion_vectors
@@ -193,19 +210,18 @@ motionVectorSearch (Frame *source, Frame *match, int width, int height)
       for (int mx = inset; mx < width - (inset + window_size) + 1;
            mx += block_size)
         {
-
           float best_match_sad = 1e10;
           int best_match_location[2] = { 0, 0 };
 
-          for (int sy = my - window_size; sy < my + window_size; sy++)
+          for (int sx = mx - window_size; sx < mx + window_size; sx++)
             {
-              for (int sx = mx - window_size; sx < mx + window_size; sx++)
+              for (int sy = my - window_size; sy < my + window_size; sy++)
                 {
                   float current_match_sad = 0;
                   // Do the SAD
-                  for (int y = 0; y < block_size; y++)
+                  for (int x = 0; x < block_size; x++)
                     {
-                      for (int x = 0; x < block_size; x++)
+                      for (int y = 0; y < block_size; y++)
                         {
                           int match_x = mx + x;
                           int match_y = my + y;
@@ -228,7 +244,7 @@ motionVectorSearch (Frame *source, Frame *match, int width, int height)
                         }
                     } // end SAD
 
-                  if (current_match_sad <= best_match_sad)
+                  if (current_match_sad < best_match_sad)
                     {
                       best_match_sad = current_match_sad;
                       best_match_location[0] = sx - mx;
@@ -243,7 +259,6 @@ motionVectorSearch (Frame *source, Frame *match, int width, int height)
           motion_vectors->push_back (v);
         }
     }
-
   return motion_vectors;
 }
 
@@ -579,7 +594,7 @@ encode ()
   int height = frame_rgb->height;
   int npixels = width * height;
 
-  printf("Image width=%d height=%d\n", width, height);
+  printf ("Image width=%d height=%d\n", width, height);
 
   if (args.optimization_mode & OpenCL)
     {
@@ -645,9 +660,18 @@ encode ()
           print ("Motion Vector Search...");
 
           gettimeofday (&starttime, NULL);
-          motion_vectors = motionVectorSearch (
-              previous_frame_lowpassed, frame_lowpassed,
-              frame_lowpassed->width, frame_lowpassed->height);
+          if (args.optimization_mode & OpenCL)
+            {
+              motion_vectors = motionVectorSearchCL (
+                  previous_frame_lowpassed, frame_lowpassed,
+                  frame_lowpassed->width, frame_lowpassed->height);
+            }
+          else
+            {
+              motion_vectors = motionVectorSearch (
+                  previous_frame_lowpassed, frame_lowpassed,
+                  frame_lowpassed->width, frame_lowpassed->height);
+            }
           gettimeofday (&endtime, NULL);
           runtime[2] = double (endtime.tv_sec) * 1000.0f
                        + double (endtime.tv_usec) / 1000.0f
