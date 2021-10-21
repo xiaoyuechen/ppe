@@ -240,8 +240,6 @@ static cl_mem buf[3];
 static int width, height;
 static FILE *output_file;
 
-static cl_kernel mvector_kernel;  
-
 void
 initCL (int pwidth, int pheight, FILE *fd)
 {
@@ -324,59 +322,3 @@ convertCL (size_t size, const float *R, const float *G, const float *B,
   fprintf (output_file, "CL copy d2h time: %u\n",
            GetTimevalMicroSeconds (&start, &stop));
 }
-
-void
-initMVCL ()
-{
-  width = 48;
-  height = 48;
-  
-  context = CreateContext (&device_id);
-  program = CreateProgram ("kernel.cl", context);
-  mvector_kernel = CreateKernel (program, "motion_vector_search");
-  cmd_queue = CreateCommandQueue (context, device_id);   
-
-  // create buffer
-  size_t size = width * height * sizeof(float);
-  CreateBuffer(context, size);
-
-  clFinish(cmd_queue);
-}
-
-void
-motionVectorsCL (std::vector<mVector> *motion_vectors, Frame *source, Frame *match, int width, int height)
-{
-	const float *in[2] = { source, match };
-	mVector *out = malloc(sizeof(mVector));
-
-	for (size_t c = 0; c < 2; ++c)  
-	  EnqueueWriteBuffer (cmd_queue, buf[c], width*height, in[c]);
-
-	// set kernel args
-	for (size_t c = 0; c < 2; ++c)
-	{
-		cl_err = clSetKernelArg (convert_kernel, c, sizeof (cl_mem), &buf[c]); 
-		if (cl_err)
-		 CL_Error ("Error setting kernel arg");
-	}
-	clFinish(cmd_queue);
-
-	// enqueue range kernel
-	cl_err = clEnqueueNDRangeKernel(cmd_queue, mvector_kernel, 2, 0, 16, 16, 0, 0, 0);
-	if (cl_err)
-	  CL_Error ("Error enqueueing range kernel"); 
-	clFinish(cmd_queue);
-
-	// read results
-	EnqueueReadBuffer (cmd_queue, buf, width*height, out);
-	cl_err = clFinish (cmd_queue);
-	if (cl_err)
-	  CL_Error ("Error finishing convert command queue"); 
-
-	// store output in results vector
-	motion_vectors->push_back (*out);
-}
-
-
-
-

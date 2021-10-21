@@ -11,10 +11,10 @@ static const char doc[] = "cencoder -- a JPEG video encoder";
 
 static const struct argp_option argp_options[]
     = { { "cl", 'c', 0, 0, "Use OpenCL optimisation" },
-        { "cl_num_thd", OPT_CL_NUM_THD, "NUM", 0, "Use NUM threads for OpenCL" },
+        { "cl_num_thd", OPT_CL_NUM_THD, "NUM", 0,
+          "Use NUM threads for OpenCL" },
         { "omp", 'm', 0, 0, "Use OpenMP optimisation" },
-      	{ "acc", 'a', 0, 0, "Use OpenACC optimisation" },
-        { "mv", 'v', 0, 0, "Use OpenCL for motionVector" },
+	{ "acc", 'a', 0, 0, "Use OpenACC optimisation" },
         { 0 } };
 
 static error_t
@@ -35,9 +35,6 @@ ParseOpt (int key, char *arg, struct argp_state *state)
       break;
     case 'a':
       args->optimization_mode |= OpenACC;
-      break;
-    case 'v':
-      args->optimization_mode |= MotionVectorOpenCL;
       break;
     default:
       return ARGP_ERR_UNKNOWN;
