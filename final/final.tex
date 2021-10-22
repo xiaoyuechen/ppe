@@ -11,11 +11,45 @@
 
 \maketitle
 
-\section{Optimizing motionVectorSearch}
+% Your grade on your project will be a combination of how challenging optimizations you choose, how well you implement them, and how well you analyze the results.
+
+\section{Optimized motionVectorSearch}
+
+100000 ms -> 
 
 Originally takes 95.22\% of runtime using 4K image sizes. This equals around  seconds per frame.
 We determined that the bottleneck is the code that compares the block to all other possible blocks in the window in order to find the best possible match for where that block moved to.
 We decided to use the GPU to speed up this comparison, and we used the map-reduce algorithm to divide the work amongst GPU cores, collect the results, and reduce the results to find the best match.
+
+3 different types of index mapping
+
+% TODO detailed description of algorithm
+
+MotionVectorSearch is only applied to frames that are market (P) in the execution statistics. 
+
+After GPU parallelization, motionVectorSearch takes 0.0\% of computation time. The motionVectorSearch function still takes 600ms which is the data transfer time.
+
+% TODO picture of kernel
+
+\section{Optimized lowPass}
+
+We parallelized convertRGBtoYCbCr and lowPass with openMP.
+
+% TODO picture of parallel lowpass
+
+\section{Optimizing loadImage}
+
+21.12\% of computation time. The loadImage function takes ... ms in absolute time
+
+\section{Analysis}
+
+absolute time of function
+
+data on runtime computation percentage
+-> but doesn't account for memory access/transfer time
+
+call graphs before and after
+
 
 \end{document}
 
