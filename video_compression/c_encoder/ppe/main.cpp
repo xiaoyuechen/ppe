@@ -56,7 +56,8 @@ loadImage (int number, string path, Image **photo)
 
   // Matlab and LibTIFF store the image diferently.
   // Necessary to mirror the image horizonatly to be consistent
-  for (int j = 0; j < (int)w; j++)
+    #pragma omp parallel for
+    for (int j = 0; j < (int)w; j++)
     {
       for (int i = 0; i < (int)h; i++)
         {
