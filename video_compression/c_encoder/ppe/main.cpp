@@ -107,21 +107,7 @@ convertRGBtoYCbCr (Image *in, Image *out)
   float *Cb = out->gc->data;
   float *Cr = out->bc->data;
 
-  if (0) /* TODO(Xiaoyue Chen): enable OpenCL version of convert */
-    {
-      if (!args.opencl_num_threads)
-        convertCL (size, R, G, B, Y, Cb, Cr, size);
-      else
-        convertCL (size, R, G, B, Y, Cb, Cr, args.opencl_num_threads);
-    }
-  else if (args.optimization_mode & OpenACC)
-    {
-      convertACC (size, R, G, B, Y, Cb, Cr);
-    }
-  else
-    {
-      convertOMP (size, R, G, B, Y, Cb, Cr);
-    }
+  convertOMP (size, R, G, B, Y, Cb, Cr);
 }
 
 Channel *
@@ -139,11 +125,31 @@ lowPass (Channel *in, Channel *out)
 
   // out = in; TODO Is this necessary?
 
-  for (int i = 0; i < width * height; i++)
-    out->data[i] = in->data[i];
+  // for (int i = 0; i < width * height; i++)
+  //   out->data[i] = in->data[i];
 
-  // In X
+  int edge_rows[] = { 0, height - 1 };
+  int edge_cols[] = { 0, width - 1 };
 
+  for (int i = 0; i < 2; ++i)
+    {
+      int row = edge_rows[i];
+      for (int col = 0; col < width; ++col)
+        {
+          out->data[row * width + col] = in->data[row * width + col];
+        }
+    }
+
+  for (int i = 0; i < 2; ++i)
+    {
+      int col = edge_cols[i];
+      for (int row = 1; row < height - 1; ++row)
+        {
+          out->data[row * width + col] = in->data[row * width + col];
+        }
+    }
+
+#pragma omp parallel
   {
     int columns_per_thread
         = (width + omp_get_num_threads () - 1) / omp_get_num_threads ();
@@ -160,6 +166,7 @@ lowPass (Channel *in, Channel *out)
         }
   }
 
+#pragma omp parallel for
   for (int row = 1; row < (height - 1); row++)
     for (int col = 1; col < (width - 1); col++)
       {
@@ -168,7 +175,6 @@ lowPass (Channel *in, Channel *out)
               + b * out->data[row * width + col]
               + c * out->data[row * width + (col + 1)];
       }
-  // In Y
 
   return out;
 }
