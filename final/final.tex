@@ -15,9 +15,7 @@
 
 \section{Optimized motionVectorSearch}
 
-100000 ms -> 
-
-Originally takes 95.22\% of runtime using 4K image sizes. This equals around  seconds per frame.
+Originally takes 95.22\% of runtime using 4K image sizes. This equals around 100 seconds per frame.
 We determined that the bottleneck is the code that compares the block to all other possible blocks in the window in order to find the best possible match for where that block moved to.
 We decided to use the GPU to speed up this comparison, and we used the map-reduce algorithm to divide the work amongst GPU cores, collect the results, and reduce the results to find the best match.
 
@@ -31,24 +29,58 @@ After GPU parallelization, motionVectorSearch takes 0.0\% of computation time. T
 
 % TODO picture of kernel
 
+\section{Optimized convertR
+
 \section{Optimized lowPass}
 
 We parallelized convertRGBtoYCbCr and lowPass with openMP.
 
 % TODO picture of parallel lowpass
 
-\section{Optimizing loadImage}
+\section{Optimized loadImage}
 
-21.12\% of computation time. The loadImage function takes ... ms in absolute time
+In the original program, the loadImage function takes 21.12\% of computation time, which is 860 milliseconds in absolute time.
+
+
+The loadImage function converts the frame data from Tiff format to RGB by inverting the rows. 
+
+After optimization the loadImage function takes 780 milliseconds in absolute time.
+
+\section{Compiler Flags & Cache Optimization}
+For the optimized version, we used the -O3 compiler optimization flag. This flag automatically uses SIMD instructions where possible, among other automatic assembly optimizations.
+
+We reorderd for loops to optimize cache access. % TODO improve
 
 \section{Analysis}
 
 absolute time of function
 
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{lll}
+    \toprule
+    Function & Original (ms) & Optimized (ms) \\
+    \midrule
+    loadImage & 860 & 780 \\
+ 
+    convertRGBtoYCbCr & 1000 & 30 \\ 
+     
+    lowPass & 2000 & 100 \\
+
+    motionVectorSearch & 400000 & 500 \\ 
+                            
+    \bottomrule
+  \end{tabular}
+  \caption{Optimization Results}
+  \label{tab:results}
+\end{table}
+
 data on runtime computation percentage
 -> but doesn't account for memory access/transfer time
 
 call graphs before and after
+
+
 
 
 \end{document}
