@@ -11,7 +11,6 @@ convert (global float *R, global float *G, global float *B)
 }
 
 #define BLKSIZE 16
-#define MAX_N_BLOCKS 16
 
 kernel void
 motionVectorSearch (global const float *sy, global const float *scb,
