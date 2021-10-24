@@ -53,10 +53,10 @@ custom_types.o: custom_types.h config.h
 dct8x8_block.o: dct8x8_block.h
 xml_aux.o: xml_aux.h config.h
 cmd_args.o: cmd_args.h
-opt_opencl.o: opt_opencl.h kernel.cl
+opt_opencl.o: opt_opencl.h
 opt_openacc.o: opt_openacc.h
 main.o: config.h test_setup.h custom_types.h dct8x8_block.h xml_aux.h cmd_args.h \
-	opt_opencl.h opt_openacc.h
+	opt_opencl.h opt_openacc.h timer.h
 
 .PHONY: clean
 clean:

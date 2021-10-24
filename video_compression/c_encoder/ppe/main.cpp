@@ -5,6 +5,7 @@
 #include "opt_openacc.h"
 #include "opt_opencl.h"
 #include "test_setup.h"
+#include "timer.h"
 #include "xml_aux.h"
 #include <cstddef>
 #include <cstdio>
@@ -54,10 +55,10 @@ loadImage (int number, string path, Image **photo)
   if (*photo == NULL)
     *photo = new Image ((int)w, (int)h, FULLSIZE);
 
-  // Matlab and LibTIFF store the image diferently.
-  // Necessary to mirror the image horizonatly to be consistent
-    #pragma omp parallel for
-    for (int j = 0; j < (int)w; j++)
+// Matlab and LibTIFF store the image diferently.
+// Necessary to mirror the image horizonatly to be consistent
+#pragma omp parallel for num_threads(6)
+  for (int j = 0; j < (int)w; j++)
     {
       for (int i = 0; i < (int)h; i++)
         {
@@ -214,15 +215,15 @@ motionVectorSearch (Frame *source, Frame *match, int width, int height)
           float best_match_sad = 1e10;
           int best_match_location[2] = { 0, 0 };
 
-          for (int sx = mx - window_size; sx < mx + window_size; sx++)
+          for (int sy = my - window_size; sy < my + window_size; sy++)
             {
-              for (int sy = my - window_size; sy < my + window_size; sy++)
+              for (int sx = mx - window_size; sx < mx + window_size; sx++)
                 {
                   float current_match_sad = 0;
                   // Do the SAD
-                  for (int x = 0; x < block_size; x++)
+                  for (int y = 0; y < block_size; y++)
                     {
-                      for (int y = 0; y < block_size; y++)
+                      for (int x = 0; x < block_size; x++)
                         {
                           int match_x = mx + x;
                           int match_y = my + y;
@@ -608,7 +609,11 @@ encode ()
 
   for (int frame_number = 0; frame_number < end_frame; frame_number++)
     {
+      START_TIMER (load_image_timer);
       loadImage (frame_number, image_path, &frame_rgb);
+      END_TIMER (load_image_timer);
+      printf ("loadImage %d takes %g seconds\n", frame_number,
+              load_image_timer);
 
       //  Convert to YCbCr
       print ("Covert to YCbCr...");
