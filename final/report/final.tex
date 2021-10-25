@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{booktabs}
 
 \title{PPE Final Project}
 \author{Hannah Atmer and Xiaoyue Chen \\ Team 6}
@@ -23,13 +24,11 @@ We decided to use the GPU to speed up this comparison, and we used the map-reduc
 
 % TODO detailed description of algorithm
 
-MotionVectorSearch is only applied to frames that are market (P) in the execution statistics. 
+MotionVectorSearch is only applied to frames that are market (P) in the execution statistics.
 
 After GPU parallelization, motionVectorSearch takes 0.0\% of computation time. The motionVectorSearch function still takes 600ms which is the data transfer time.
 
 % TODO picture of kernel
-
-\section{Optimized convertR
 
 \section{Optimized lowPass}
 
@@ -42,11 +41,11 @@ We parallelized convertRGBtoYCbCr and lowPass with openMP.
 In the original program, the loadImage function takes 21.12\% of computation time, which is 860 milliseconds in absolute time.
 
 
-The loadImage function converts the frame data from Tiff format to RGB by inverting the rows. 
+The loadImage function converts the frame data from Tiff format to RGB by inverting the rows.
 
 After optimization the loadImage function takes 780 milliseconds in absolute time.
 
-\section{Compiler Flags & Cache Optimization}
+\section{Compiler Flags \& Cache Optimization}
 For the optimized version, we used the -O3 compiler optimization flag. This flag automatically uses SIMD instructions where possible, among other automatic assembly optimizations.
 
 We reorderd for loops to optimize cache access. % TODO improve
@@ -62,13 +61,13 @@ absolute time of function
     Function & Original (ms) & Optimized (ms) \\
     \midrule
     loadImage & 860 & 780 \\
- 
-    convertRGBtoYCbCr & 1000 & 30 \\ 
-     
+
+    convertRGBtoYCbCr & 1000 & 30 \\
+
     lowPass & 2000 & 100 \\
 
-    motionVectorSearch & 400000 & 500 \\ 
-                            
+    motionVectorSearch & 400000 & 500 \\
+
     \bottomrule
   \end{tabular}
   \caption{Optimization Results}
@@ -85,3 +84,7 @@ call graphs before and after
 
 \end{document}
 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

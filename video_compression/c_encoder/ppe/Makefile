@@ -37,7 +37,7 @@ CC = gcc
 CXX = g++
 
 CPPFLAGS = $(DEBUG_FLAGS) -O3 -I /usr/include/libxml2/ -fopenmp \
-	-msse4.1 -mavx2 -fopenacc
+	-msse4.1 -mavx2 -fopenacc -march=native -mtune=native
 CFLAGS = -std=c99
 CXXFLAGS = -std=c++17
 LDFLAGS = $(PERF_FLAGS)
