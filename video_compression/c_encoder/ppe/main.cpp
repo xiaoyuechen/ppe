@@ -123,11 +123,6 @@ lowPass (Channel *in, Channel *out)
   int width = in->width;
   int height = in->height;
 
-  // out = in; TODO Is this necessary?
-
-  // for (int i = 0; i < width * height; i++)
-  //   out->data[i] = in->data[i];
-
   int edge_rows[] = { 0, height - 1 };
   int edge_cols[] = { 0, width - 1 };
 

@@ -315,7 +315,7 @@
   \begin{exampleblock}{}
     \lstinputlisting[basicstyle=\tiny,linerange=57-69]{src/kernel.cl}
     \qquad \qquad {\color{red} Part 2}
-    \lstinputlisting[basicstyle=\tiny,linerange=90-95]{src/kernel.cl}
+    \lstinputlisting[basicstyle=\tiny,linerange=94-98]{src/kernel.cl}
   \end{exampleblock}
 \end{frame}
 
@@ -323,7 +323,7 @@
   \frametitle{Compute SAD for \lstinline{motionVectorSearch} kernel}
   \framesubtitle{Part 2}
   \begin{exampleblock}{}
-    \lstinputlisting[basicstyle=\tiny,linerange=70-89]{src/kernel.cl}
+    \lstinputlisting[basicstyle=\tiny,linerange=70-93]{src/kernel.cl}
   \end{exampleblock}
 \end{frame}
 
@@ -331,8 +331,18 @@
   \frametitle{Find the min SAD motion vector for
     \lstinline{motionVectorSearch} kernel}
   \begin{exampleblock}{}
-    \lstinputlisting[basicstyle=\tiny,linerange=97-114]{src/kernel.cl}
+    \lstinputlisting[basicstyle=\tiny,linerange=99-119]{src/kernel.cl}
   \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Results of optimising \lstinline{motionVectorSearch}}
+  \begin{alertblock}{Average time improvement}
+    \begin{itemize}
+    \item<+-> \(500000_{ms} \to 500_{ms}\)
+    \item<+-> 1000x speedup
+    \end{itemize}
+  \end{alertblock}
 \end{frame}
 
 

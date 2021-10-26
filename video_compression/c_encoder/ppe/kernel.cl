@@ -67,7 +67,7 @@ motionVectorSearch (global const float *sy, global const float *scb,
          i < (local_index + 1) * n_blocks && i < search_size * search_size;
          ++i)
       {
-        float current_match_sad = 0;
+        float3 current_match_sad = (float3)(0, 0, 0);
         size_t srow0 = i / search_size;
         size_t scol0 = i - srow0 * search_size;
         for (size_t mrow = 0; mrow < BLKSIZE; ++mrow)
@@ -77,13 +77,17 @@ motionVectorSearch (global const float *sy, global const float *scb,
                 size_t srow = srow0 + mrow;
                 size_t scol = scol0 + mcol;
                 float3 diff = fabs (match[mrow][mcol] - search[srow][scol]);
-                current_match_sad
-                    += 0.5f * diff.r + 0.25f * diff.g + 0.25f * diff.b;
+                /* no need to compute every iteration:
+                 * 0.5f * diff.r + 0.25f * diff.g + 0.25f * diff.b; */
+                current_match_sad += diff;
               }
           }
-        if (current_match_sad < thread_best_match_sad)
+        float current_match_sad_weighted = 0.5f * current_match_sad.r
+                                           + 0.25f * current_match_sad.g
+                                           + 0.25f * current_match_sad.b;
+        if (current_match_sad_weighted < thread_best_match_sad)
           {
-            thread_best_match_sad = current_match_sad;
+            thread_best_match_sad = current_match_sad_weighted;
             thread_best_match_location
                 = (int2)(-BLKSIZE + srow0, -BLKSIZE + scol0);
           }

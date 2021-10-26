@@ -3,16 +3,19 @@
 \begin{frame}
   \frametitle{How slow is the vanilla program}
   \begin{block}{Setup}
-    \lstinputlisting[linerange=23-26]{src/test_setup.h}
+    \begin{itemize}
+    \item<+-> solar4k image
+    \item<+-> encode 5 frames
+    \end{itemize}
   \end{block}
-  \pause{}
+  \onslide<+->
   \begin{exampleblock}{Hardware}
     \begin{itemize}
     \item Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
     \item NVIDIA GeForce GTX 1060 Mobile
     \end{itemize}
   \end{exampleblock}
-  \pause{}
+  \onslide<+->
   \begin{alertblock}{Performance}
     \begin{itemize}
     \item The entire program: 808 s
@@ -35,16 +38,18 @@
       \toprule
       function & time (ms) \\
       \midrule
-      \alert<4->{Convert to YCbCr} & \alert<4->{1000} \\
-      \alert<3->{Low pass filter} & \alert<3->{2000} \\
-      \alert<2->{Motion Vector Search} & \alert<2->{400000} \\
-      Compute Delta &                700 \\
-      Downsample &                   200 \\
-      Convert to frequency domain &  500 \\
-      Quantize &                     500 \\
-      Compute DC differences &       10 \\
-      Zig-zag order &                200 \\
-      Encode coefficients &          600 \\
+      \alert<4->{Convert to YCbCr} & \alert<4->{7000} \\
+      \alert<3->{Low pass filter} & \alert<3->{10000} \\
+      \alert<2->{Motion Vector Search} & \alert<2->{800000} \\
+      Compute Delta &                1000 \\
+      Downsample &                   1000 \\
+      Convert to frequency domain &  3000 \\
+      Quantize &                     2000 \\
+      Compute DC differences &       50 \\
+      Zig-zag order &                900 \\
+      Encode coefficients &          3000 \\
+      \midrule
+      Total & 80000 \\
       \bottomrule
     \end{tabular}
   \end{table}
