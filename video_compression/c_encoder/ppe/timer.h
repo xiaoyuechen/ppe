@@ -27,10 +27,9 @@
 
 #define END_TIMER(timer)                                                      \
   gettimeofday (&timer##_end, NULL);                                          \
-  double timer = double (timer##_end.tv_sec) * 1000.0f                        \
-                 + double (timer##_end.tv_usec) / 1000.0f                     \
-                 - double (timer##_start.tv_sec) * 1000.0f                    \
-                 - double (timer##_start.tv_usec) / 1000.0f;                  \
-  timer /= 1000;
+  double timer                                                                \
+      = ((double)(timer##_end.tv_sec) - (double)(timer##_start.tv_sec))       \
+        + ((double)(timer##_end.tv_usec) - (double)(timer##_start.tv_usec))   \
+              / 1E6;
 
 #endif

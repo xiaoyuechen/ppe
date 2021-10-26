@@ -1,5 +1,55 @@
 \section{Motivation}
 
+\begin{frame}
+  \frametitle{How slow is the vanilla program}
+  \begin{block}{Setup}
+    \lstinputlisting[linerange=23-26]{src/test_setup.h}
+  \end{block}
+  \pause{}
+  \begin{exampleblock}{Hardware}
+    \begin{itemize}
+    \item Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
+    \item NVIDIA GeForce GTX 1060 Mobile
+    \end{itemize}
+  \end{exampleblock}
+  \pause{}
+  \begin{alertblock}{Performance}
+    \begin{itemize}
+    \item The entire program: 808 s
+    \item \lstinline{motionVectorSearch}: \(93.5 \%\)
+    \end{itemize}
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Callgraph of the vanilla program}
+  \begin{figure}[h]
+    \centering \includegraphics[height=6cm]{src/ppe-callgraph.png}
+  \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Breakdown of the vanilla program}
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{ll}
+      \toprule
+      function & time (ms) \\
+      \midrule
+      \alert<4->{Convert to YCbCr} & \alert<4->{1000} \\
+      \alert<3->{Low pass filter} & \alert<3->{2000} \\
+      \alert<2->{Motion Vector Search} & \alert<2->{400000} \\
+      Compute Delta &                700 \\
+      Downsample &                   200 \\
+      Convert to frequency domain &  500 \\
+      Quantize &                     500 \\
+      Compute DC differences &       10 \\
+      Zig-zag order &                200 \\
+      Encode coefficients &          600 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
 
 %%% Local Variables:
 %%% mode: latex

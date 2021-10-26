@@ -1,6 +1,7 @@
 #define CL_TARGET_OPENCL_VERSION 300
 
 #include "opt_opencl.h"
+#include "timer.h"
 #include <CL/cl.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -386,7 +387,6 @@ motionCL (size_t size[2], size_t block_size, const float *s[3],
     }
   CL_CHECK (clEnqueueNDRangeKernel (cmd_queue, motion_kernel, 2, 0, size,
                                     local_work_size, 0, 0, 0));
-  CL_CHECK (clFinish (cmd_queue));
   size_t motion_buf_size = (size[0] / block_size - 2)
                            * (size[1] / block_size - 2) * sizeof (int) * 2;
   CL_CHECK (clEnqueueReadBuffer (cmd_queue, motion_buf, 0, 0, motion_buf_size,
