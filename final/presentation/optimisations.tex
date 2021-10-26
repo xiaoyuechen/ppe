@@ -128,19 +128,19 @@
       \begin{tikzpicture}[scale=0.3]
         \draw[step=1,black,thin] (0,0) grid (9,-9);
         \draw[blue,thick] (0,0) rectangle (9,-9);
-        \foreach \r in {0,...,2}{
+        \foreach \r in {0,...,1}{
           \foreach \c in {0,...,6}{
             \FPeval{\n}{clip(\r*7 + \c + 1)}
             \uncover<\n>{\draw[green,thick] (\c,-\r) rectangle (3+\c,-3-\r);}
           }
         }
-        \draw<22->[green,thick] (1,-4) rectangle (3+1,-3-4);
-        \draw<23->[brown,thick,->] (4.5,-4.5) -- (2.5,-5.5);
+        \draw<15->[green,thick] (1,-4) rectangle (3+1,-3-4);
+        \draw<16->[brown,thick,->] (4.5,-4.5) -- (2.5,-5.5);
       \end{tikzpicture}
       \caption{Search window}
     \end{subfigure}
   \end{figure}
-  \onslide<24->
+  \onslide<16->
   \begin{alertblock}{Motion vector}
     The position difference between the \alert{match block} and its
     most similar \alert{search block} in \alert{search window}
@@ -158,7 +158,7 @@
       \centering
       \begin{tikzpicture}[scale=0.15]
         \draw[step=1,black,thin] (0,0) grid (30,-22);
-        \foreach \r in {1,...,3}{
+        \foreach \r in {1,...,2}{
           \foreach \c in {1,...,8}{
             \FPeval{\n}{clip((\r-1)*8 + \c)}
             \FPeval{\x}{clip(\c*3)}
@@ -173,7 +173,7 @@
       \centering
       \begin{tikzpicture}[scale=0.15]
         \draw[step=1,black,thin] (0,0) grid (30,-22);
-        \foreach \r in {0,...,2}{
+        \foreach \r in {0,...,1}{
           \foreach \c in {0,...,7}{
             \FPeval{\n}{clip(\r*8 + \c + 1)}
             \FPeval{\x}{clip(\c*3)}
@@ -185,7 +185,7 @@
       \caption{Search frame}
     \end{subfigure}
   \end{figure}
-  \onslide<24->
+  \onslide<16->
   \begin{alertblock}{Output}
     An array of \alert{motion vectors}
   \end{alertblock}
