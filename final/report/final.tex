@@ -112,9 +112,9 @@ Load Image.
 \section{Optimisations}
 \subsection{Motion Vector Search}
 \subsubsection{Analysis}
-Originally takes 93.51\% of runtime using 4K image sizes. This equals
+The motion vector search function riginally takes 93.51\% of runtime using 4K image sizes. This equals
 around 100 seconds per frame. The slow execution is mainly due to
-serve cache problems.
+severe cache problems.
 
 We found that the algorithm has the following properties:
 \begin{itemize}
@@ -151,13 +151,13 @@ Search, firstline=15]{src/kernel.cl}
 We reduced the average execution time of the function from 500,000 ms
 to 500 ms, which is a 1000x speedup. We achieved such impressive
 speedup by utilising the group-local memory of our GPU very well.
-Besides, distributing the tasks evenly to different threads also help
+Besides, distributing the tasks evenly to different threads also improves
 the performance.
 
 \subsection{Low-Pass Filter}
 \subsubsection{Analysis}
 This algorithm has a lot of data dependencies. The results of the next
-row depends on the results of the previous loop. Breaking the
+row depend on the results of the previous loop. Breaking the
 dependencies would yield wrong results. Therefore, we need to be
 careful when parallelising it using OpenMP.
 
@@ -167,8 +167,8 @@ edges.
 
 \subsubsection{Implementation}
 We used OpenMP to optimise the function. We assign each thread a
-number of columns to process because there is no data dependencies
-across columns. We still use row major access in each thread to
+number of columns to process because there are no data dependencies
+across columns. We still use row-major access in each thread to
 utilise cache better. \lstinputlisting[caption=OpenMP optimisation of
 Low-Pass Filter, linerange=113-175]{src/main.cpp}
 
@@ -180,10 +180,10 @@ better cache utilisation, as well as parallelism.
 \subsection{Convert to YCbCr}
 \subsubsection{Analysis}
 The original function has cache utilisation problems. The algorithm is
-trivially parallelisable since there is no data dependencies.
+trivially parallelisable since there are no data dependencies.
 
 \subsubsection{Implementation}
-We used OpenMP to optimised the function.
+We used OpenMP to optimise the function.
 \lstinputlisting[caption=OpenMP optimisation of Convert to YCbCr,
 linerange=80-97]{src/main.cpp}
 
@@ -194,8 +194,8 @@ utilisation as well as parallelism.
 
 \subsection{Other optimisations}
 We complied our program using GCC with \verb|-msse4.1 -avx2 -O3|
-flags. By checking the generated assembly, we found that GCC could
-reliable issue AVX instructions as well as handle loop unrolling.
+flags. By checking the generated assembly, we found that GCC 
+reliably issues AVX instructions and unrolls loops.
 Optimisations from the compiler also improved the program's
 performance.
 
@@ -209,7 +209,7 @@ Motion Vector Search (MVS) function which has seen a 1000x speedup.
   \begin{tikzpicture}
     \begin{axis}[xbar, xmin=0, enlarge y limits=0.5, tickwidth=0pt,
       xlabel={time (ms)}, ytick=data, symbolic y coords = {total, MVS,
-        lowpass, convert}, nodes near coords ]
+        lowpass, convert}, nodes near coords, axis lines=none ]
       \addplot coordinates {(200,convert) (600,lowpass) (1000,MVS)
         (7000,total)}; \addplot coordinates {(7000,convert)
         (10000,lowpass) (800000,MVS) (800000,total)};
@@ -222,7 +222,7 @@ Motion Vector Search (MVS) function which has seen a 1000x speedup.
 
 \section{Discussion}
 Most of the speedup is from optimising the Motion Vector Search (MVS)
-function which has seen a 1000x speedup. It is also the most difficult
+function, which has seen a 1000x speedup. It is also the most difficult
 function for us to optimise. The difficulties mainly come from two
 aspects:
 \begin{enumerate}
@@ -234,7 +234,7 @@ aspects:
 \end{enumerate}
 
 In spite of the difficulties, using OpenCL to do such low-level
-optimisation is proven to be worth the effort, as the function is the
+optimisation is proven to be worth the effort, as the motion vector search function is the
 major bottleneck of the program.
 
 \end{document}
