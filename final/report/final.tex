@@ -98,7 +98,7 @@ the time is spent on executing the Motion Vector Search function.
 \end{table}
 
 \begin{figure}[h]
-  \centering \includegraphics[height=7cm]{src/ppe-callgraph.png}
+  \centering \includegraphics[height=6cm]{src/ppe-callgraph.png}
   \caption{Callgraph of the original program}
   \label{fig:vanilla_callgraph}
 \end{figure}
@@ -134,7 +134,15 @@ divide the work amongst GPU cores, collect the results, and reduce the
 results to find the best match.
 
 \subsubsection{Implementation}
-We used OpenCL to implement the optimised function as the following:
+We used OpenCL to implement the optimised function. When enqueuing the
+kernel, the global dimension is \(4096 \times 4096\) (the entire image
+size) and the local dimension is \(16 \times 16\) (the block size). Each
+work-group is tasked to find the motion vector of a match block.
+
+Another notable feature of this implementation is the good utilisation
+of group-local memory. This improved the memory performance of GPU
+significantly.
+
 \lstinputlisting[caption=OpenCL implementation of Motion Vector
 Search, firstline=15]{src/kernel.cl}
 
@@ -160,9 +168,8 @@ edges.
 We used OpenMP to optimise the function. We assign each thread a
 number of columns to process because there is no data dependencies
 across columns. We still use row major access in each thread to
-utilise cache better.
-\lstinputlisting[caption=OpenMP optimisation of Low-Pass Filter,
-linerange=113-175]{src/main.cpp}
+utilise cache better. \lstinputlisting[caption=OpenMP optimisation of
+Low-Pass Filter, linerange=113-175]{src/main.cpp}
 
 \subsubsection{Speedup}
 We reduced the average execution time of the function from 2,000 ms to
@@ -188,7 +195,8 @@ utilisation as well as parallelism.
 We complied our program using GCC with \verb|-msse4.1 -avx2 -O3|
 flags. By checking the generated assembly, we found that GCC could
 reliable issue AVX instructions as well as handle loop unrolling.
-Optimisations from the compiler also improved the program's performance.
+Optimisations from the compiler also improved the program's
+performance.
 
 \section{Results}
 The results of our optimisation efforts could be summarised in
